@@ -1,0 +1,59 @@
+{
+  "project_name": "Nest Services - Premium 3D Rental Marketplace & Tenant Management Platform",
+  "theme": "Luxury Cinematic Dark (Deep Black #0A0A0A & Metallic Gold #D4AF37)",
+  "context_type": "High-End Marketing + Immersive 3D Walkthrough + Real Estate Marketplace + SaaS Resident/Landlord Portal",
+  "typography": {
+    "headings": {
+      "font_family": "Playfair Display, serif",
+      "weights": ["400", "600", "700"],
+      "letter_spacing": "tracking-tight",
+      "classes": "font-serif tracking-tight"
+    },
+    "body": {
+      "font_family": "Plus Jakarta Sans, sans-serif",
+      "weights": ["300", "400", "500", "600"],
+      "classes": "font-sans leading-relaxed"
+    },
+    "mono": {
+      "font_family": "JetBrains Mono, monospace",
+      "classes": "font-mono text-xs text-amber-400/80"
+    }
+  },
+  "colors": {
+    "background": "#09090b",
+    "surface": "#121216",
+    "surface_glass": "rgba(18, 18, 22, 0.75)",
+    "primary_gold": "#D4AF37",
+    "gold_gradient": "linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #AA771C 100%)",
+    "gold_glow": "rgba(212, 175, 55, 0.15)",
+    "text_main": "#F4F4F6",
+    "text_muted": "#A1A1AA",
+    "border_gold": "rgba(212, 175, 55, 0.25)",
+    "border_subtle": "rgba(255, 255, 255, 0.08)"
+  },
+  "image_urls": {
+    "hero_exterior": "https://images.unsplash.com/photo-1702411200201-3061d0eea802?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwzfHxsdXh1cnklMjBwZW50aG91c2UlMjBpbnRlcmlvciUyMGFyY2hpdGVjdHVyZXxlbnwwfHx8fDE3ODY4MzY3ODR8MA&ixlib=rb-4.1.0&q=85",
+    "living_room": "https://images.unsplash.com/photo-1758448755778-90ebf4d0f1e7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHw0fHxtb2Rlcm4lMjBpbmRpYW4lMjBsdXh1cnklMjBsaXZpbmclMjByb29tfGVufDB8fHx8MTc4NjgzNjc4NHww&ixlib=rb-4.1.0&q=85",
+    "kitchen": "https://images.pexels.com/photos/18285887/pexels-photo-18285887.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "bedroom": "https://images.unsplash.com/photo-1542928658-22251e208ac1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBwZW50aG91c2UlMjBpbnRlcmlvciUyMGFyY2hpdGVjdHVyZXxlbnwwfHx8fDE3ODY4MzY3ODR8MA&ixlib=rb-4.1.0&q=85",
+    "balcony_view": "https://images.unsplash.com/photo-1757924461488-ef9ad0670978?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHw0fHxsdXh1cnklMjBwZW50aG91c2UlMjBpbnRlcmlvciUyMGFyY2hpdGVjdHVyZXxlbnwwfHx8fDE3ODY4MzY3ODR8MA&ixlib=rb-4.1.0&q=85"
+  },
+  "component_structure": {
+    "navigation": "Fixed glass header with brand logo, 10 primary links (Home, Explore Rentals, Map, Book a Tour, Resident Portal, About, Contact, Notifications, Wishlist, Login), and mobile hamburger drawer.",
+    "cinematic_3d_walkthrough": "Scroll-driven interactive virtual tour with room-by-room cinematic sequence: Exterior House View -> Entrance -> Living Room -> Dining Room -> Kitchen -> Bedroom -> Bathroom -> Balcony / Final View -> Rental CTA.",
+    "marketplace": "Advanced filtering in ₹ (price range, location in India e.g. Mumbai, Bangalore, Delhi NCR, Goa; beds, baths, pets, move-in date, furnished status), grid view, list view, map preview, property cards with quick like, share, wishlist, and tour booking.",
+    "property_details_modal_or_page": "Immersive gallery, multi-angle 3D walkthrough preview, video tour placeholder, amenities checklist, house rules, rent & deposit calculation, digital application trigger, tour scheduler, and owner contact.",
+    "owner_property_upload": "Manual multi-image uploader with drag-and-drop preview, delete, reorder, cover image selection, and instant marketplace publishing.",
+    "resident_portal": "Dashboard for active tenants: rent payment breakdown in ₹, lease agreement status with demo e-signature, maintenance request tracker, internal messaging with property manager, and document vault.",
+    "landlord_dashboard": "Overview of portfolio occupancy, monthly rental collection in ₹, lease tracking, accounting ledger, and quick maintenance dispatch.",
+    "admin_dashboard": "Platform-wide moderation, property approvals, user role manager (Visitor, Renter, Landlord, Admin), and audit logs.",
+    "checkout_modal": "Demo INR checkout supporting UPI (Google Pay / PhonePe / Paytm / BHIM QR) and Credit/Debit Card with 'No Real Money Charged' disclaimer.",
+    "whatsapp_integration": "Floating WhatsApp quick-contact button with pre-filled concierge message."
+  },
+  "interactive_requirements": {
+    "data_testid_convention": "All interactive buttons, links, inputs, and tabs must include descriptive data-testid attributes (e.g. data-testid='nav-explore-rentals', data-testid='property-card-12', data-testid='book-tour-btn').",
+    "accessibility": "High contrast gold-on-black UI, focus states with gold rings, respect prefers-reduced-motion for 3D animations.",
+    "toasts": "Sonner toast notifications for user actions (wishlist added, tour booked, payment submitted, application sent)."
+  },
+  "instructions_to_main_agent": "Implement full React application with Tailwind CSS, Lucide icons, Framer Motion for cinematic scroll walkthroughs, and state management for rentals, bookings, wishlist, notifications, resident portal, and landlord dashboard. Ensure complete mobile-first responsiveness and ₹ currency throughout."
+}
