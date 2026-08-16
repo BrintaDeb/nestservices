@@ -1,0 +1,43 @@
+{
+  "summary": "Executed Nest Services v2 backend regression (26 pytest tests) and critical frontend smoke via Playwright. Backend: 25/26 passing (96%). Frontend: all key flows (home walkthrough, admin login/dashboard, tenant portal, explore filters, WhatsApp CTA, INR pricing, light ivory theme) verified via Playwright.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/login", "issue": "Brute-force lockout never triggers behind the k8s ingress. `request.client.host` returns the ingress-pod IP (10.227.3.197 / 10.227.3.198 round-robin) instead of the real client IP, so the identifier (`ip:email`) fragments across pods and the count never reaches 5. Verified: 7 consecutive failed logins for the same email all returned 401; DB shows two rows for the same email keyed by different upstream IPs (count=5 and count=2). Fix: derive client IP from `X-Forwarded-For` (first value) or `X-Real-IP` before falling back to `request.client.host`, and key on email only (or email + normalized IP)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Global", "issues": ["Browser tab title is 'Emergent | Fullstack App' — should be branded as 'Nest Services — find your nest, secure your space' (update /app/frontend/public/index.html <title> and meta description)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_nest_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix brute-force lockout by honouring X-Forwarded-For so the counter is not fragmented across ingress pods.",
+    "Update /app/frontend/public/index.html <title> and description to Nest Services branding."
+  ],
+  "critical_code_review_comments": [
+    "auth_router.login uses `request.client.host` which resolves to internal proxy IPs behind ingress — lockout is effectively disabled in this environment.",
+    "wishlist_toggle route relies on `ObjectId(property_id)` inside `wishlist_list` — a stray non-Object-Id wishlist entry (e.g. from a deleted property) would raise a 500. Consider filtering safely.",
+    "startup event uses deprecated @app.on_event; move to lifespan handler for FastAPI ≥0.110.",
+    "Uploads do not verify file MIME/magic bytes, only extension — acceptable for MVP but flag for hardening.",
+    "properties_router `_serialize` returns raw datetimes which FastAPI can serialize, but detail endpoint mixes ISO strings (for comments) and raw datetime (for property created_at) — inconsistent."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_nest_api.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/iteration_2.json"
+  ],
+  "success_rate": {"backend": "96% (25/26)", "frontend": "100% smoke flows verified"},
+  "test_credentials": "admin@nestservices.in / Nest@Admin2026 and tanya@nestservices.in / Tanya@2026 both work.",
+  "seed_data_creation": "Test suite creates and cleans up TEST-prefixed properties, plus creates TEST bookings/applications/maintenance/comments/saved-searches under the demo tenant. Only one property CRUD test performs a full create→update→delete cycle so no permanent seed data pollution.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend rewritten to routers under /api/*. Auth accepts both httpOnly cookies and Authorization: Bearer. Only one failing test: test_brute_force_lockout. The failure is a real backend bug (ingress IP fragmentation) — not a test flake. Frontend theme is light ivory/terra; walkthrough is scroll-driven with a rail showing Exterior/Entrance/Living Room/Dining Room/Kitchen/Bedroom/Balcony. All 8 seeded properties render on /explore (6 Agartala + Guwahati + Shillong).",
+  "rca of the issue": "Brute-force lockout RCA: In routers/auth_router.py, the identifier is constructed as `f\"{request.client.host}:{email}\"`. Behind Kubernetes ingress+service, `request.client.host` is the internal upstream address (10.227.3.197/198), which the ingress balances round-robin across requests from the same external client. Consecutive fails for the same email therefore create N separate `login_attempts` rows (one per upstream IP), none of which ever reach count>=5. Mitigation: read the first hop of `X-Forwarded-For` (or `X-Real-IP`) and use that as the IP component; additionally consider an email-only counter as a secondary guard so the lockout still works when the client IP header is missing."
+}

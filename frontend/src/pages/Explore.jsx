@@ -1,0 +1,184 @@
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Bell, Search, SlidersHorizontal, X } from "lucide-react";
+import { api, toApiError } from "../lib/api";
+import PropertyCard from "../components/PropertyCard";
+import { useAuth } from "../lib/auth";
+import { useToast } from "../components/ToastProvider";
+
+const PRICE_BANDS = [
+  { label: "Any budget", value: "" },
+  { label: "Under ₹15,000", value: "15000" },
+  { label: "Under ₹25,000", value: "25000" },
+  { label: "Under ₹40,000", value: "40000" },
+  { label: "Under ₹60,000", value: "60000" },
+  { label: "Under ₹1,00,000", value: "100000" },
+];
+
+const TYPES = ["All types", "Apartment", "House", "Villa", "Studio", "Independent Floor", "PG"];
+const FURNISHED = ["Any", "Furnished", "Semi-furnished", "Unfurnished"];
+const PET = ["Any", "Yes", "No"];
+
+export default function Explore() {
+  const [params, setParams] = useSearchParams();
+  const [q, setQ] = useState(params.get("q") || "");
+  const [city, setCity] = useState(params.get("city") || "All cities");
+  const [type, setType] = useState(params.get("type") || "All types");
+  const [maxRent, setMaxRent] = useState(params.get("max") || "");
+  const [minRent, setMinRent] = useState(params.get("min") || "");
+  const [bedrooms, setBedrooms] = useState(params.get("bed") || "");
+  const [furnished, setFurnished] = useState(params.get("furn") || "Any");
+  const [pet, setPet] = useState(params.get("pet") || "Any");
+  const [moveIn, setMoveIn] = useState(params.get("move") || "");
+  const [items, setItems] = useState([]);
+  const [wished, setWished] = useState([]);
+  const [facets, setFacets] = useState({ cities: ["Agartala", "Guwahati", "Shillong"], types: [] });
+  const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const { user } = useAuth();
+  const toast = useToast();
+
+  useEffect(() => {
+    api.get("/api/properties/facets").then(({ data }) => setFacets((f) => ({ ...f, ...data }))).catch(() => {});
+  }, []);
+
+  const query = useMemo(() => {
+    const p = {};
+    if (q) p.q = q;
+    if (city && city !== "All cities") p.city = city;
+    if (type && type !== "All types") p.property_type = type;
+    if (maxRent) p.max_rent = Number(maxRent);
+    if (minRent) p.min_rent = Number(minRent);
+    if (bedrooms) p.bedrooms = Number(bedrooms);
+    if (furnished && furnished !== "Any") p.furnished = furnished;
+    if (pet && pet !== "Any") p.pet_friendly = pet === "Yes";
+    if (moveIn) p.move_in = moveIn;
+    return p;
+  }, [q, city, type, maxRent, minRent, bedrooms, furnished, pet, moveIn]);
+
+  useEffect(() => {
+    setLoading(true);
+    api.get("/api/properties", { params: query })
+      .then(({ data }) => setItems(data))
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
+    // sync url
+    const next = Object.fromEntries(Object.entries(query).map(([k, v]) => [k === "property_type" ? "type" : k === "max_rent" ? "max" : k === "min_rent" ? "min" : k === "bedrooms" ? "bed" : k === "furnished" ? "furn" : k === "move_in" ? "move" : k, String(v)]));
+    setParams(next, { replace: true });
+  }, [query, setParams]);
+
+  useEffect(() => {
+    if (user) api.get("/api/wishlist").then(({ data }) => setWished(data.map((x) => x.id))).catch(() => {});
+  }, [user]);
+
+  const toggleWish = async (id) => {
+    if (!user) return toast.push("Please sign in to save homes.");
+    try {
+      const { data } = await api.post("/api/wishlist/toggle", { property_id: id });
+      setWished((s) => data.wishlisted ? [...new Set([...s, id])] : s.filter((x) => x !== id));
+      toast.push(data.wishlisted ? "Added to wishlist" : "Removed from wishlist");
+    } catch (e) { toast.push(toApiError(e)); }
+  };
+
+  const saveSearch = async () => {
+    if (!user) return toast.push("Sign in to save this search.");
+    try {
+      const name = [city !== "All cities" && city, bedrooms && `${bedrooms}BHK`, maxRent && `under ₹${Number(maxRent).toLocaleString("en-IN")}`].filter(Boolean).join(" · ") || "Custom search";
+      await api.post("/api/saved-searches", { name, query });
+      toast.push("Search saved. We'll notify you about new matches.");
+    } catch (e) { toast.push(toApiError(e)); }
+  };
+
+  return (
+    <main className="container-nest pt-32 pb-20">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+        <div>
+          <div className="kicker">Curated rentals · India</div>
+          <h1 className="headline-lg mt-4 text-nest-char">Homes with a<br /><em className="not-italic text-nest-terra font-normal">point of view.</em></h1>
+        </div>
+        <p className="text-body max-w-sm text-[14px]">Thoughtfully selected residences in Agartala and beyond. <b className="text-nest-char">{items.length} residences</b> match your view.</p>
+      </div>
+
+      {/* Filter bar */}
+      <div className="glass-white p-3 rounded-md flex flex-wrap gap-2 items-center">
+        <div className="flex items-center gap-2 flex-1 min-w-[220px] px-3">
+          <Search size={16} className="text-nest-clay" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search city, area or property"
+                 className="flex-1 bg-transparent outline-none py-3 text-[13px]" data-testid="rental-search-input" />
+        </div>
+        <select value={city} onChange={(e) => setCity(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px]" data-testid="filter-city">
+          <option>All cities</option>
+          {facets.cities.map((c) => <option key={c}>{c}</option>)}
+        </select>
+        <select value={type} onChange={(e) => setType(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px]" data-testid="filter-property-type">
+          {TYPES.map((t) => <option key={t}>{t}</option>)}
+        </select>
+        <select value={maxRent} onChange={(e) => setMaxRent(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px]" data-testid="filter-price">
+          {PRICE_BANDS.map((b) => <option key={b.label} value={b.value}>{b.label}</option>)}
+        </select>
+        <button className="btn-outline !py-2 !px-3 !text-[12px]" onClick={() => setShowFilters(!showFilters)} data-testid="filter-more-button">
+          <SlidersHorizontal size={13} /> More filters
+        </button>
+        <button className="btn-primary !py-2 !px-3 !text-[12px]" onClick={saveSearch} data-testid="save-search-button"><Bell size={12} /> Save search</button>
+      </div>
+
+      {showFilters && (
+        <div className="glass-white mt-3 p-4 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label className="font-mono-sm text-nest-clay block mb-2">Bedrooms</label>
+            <select value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px] w-full" data-testid="filter-bedrooms">
+              <option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option>
+            </select>
+          </div>
+          <div>
+            <label className="font-mono-sm text-nest-clay block mb-2">Furnishing</label>
+            <select value={furnished} onChange={(e) => setFurnished(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px] w-full" data-testid="filter-furnished">
+              {FURNISHED.map((f) => <option key={f}>{f}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="font-mono-sm text-nest-clay block mb-2">Pet friendly</label>
+            <select value={pet} onChange={(e) => setPet(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px] w-full" data-testid="filter-pet">
+              {PET.map((p) => <option key={p}>{p}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="font-mono-sm text-nest-clay block mb-2">Move-in from</label>
+            <input type="date" value={moveIn} onChange={(e) => setMoveIn(e.target.value)} className="bg-transparent border border-nest-sand py-[10px] px-3 text-[13px] w-full" data-testid="filter-movein" />
+          </div>
+          <button className="btn-outline !py-2 !px-3 !text-[12px] col-span-2 md:col-span-4" onClick={() => { setBedrooms(""); setFurnished("Any"); setPet("Any"); setMoveIn(""); setMinRent(""); setMaxRent(""); setType("All types"); setCity("All cities"); setQ(""); }} data-testid="filter-clear-button">
+            <X size={12} /> Clear all filters
+          </button>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between mt-6 mb-6 text-[12px] text-body">
+        <span>Showing <b className="text-nest-char">{items.length}</b> residences</span>
+      </div>
+
+      {loading ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="prop-card">
+              <div className="prop-media bg-nest-sand animate-pulse" />
+              <div className="p-5 space-y-3">
+                <div className="h-5 bg-nest-sand animate-pulse w-2/3" />
+                <div className="h-3 bg-nest-sand animate-pulse w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-24">
+          <p className="text-body">No residences match those filters yet. Try widening your search.</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {items.map((p) => (
+            <PropertyCard key={p.id} p={p} wished={wished.includes(p.id)} onToggleWish={toggleWish} />
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}

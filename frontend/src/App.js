@@ -1,33 +1,103 @@
-import { useEffect, useMemo, useState } from "react";
-import { BrowserRouter, Routes, Route, Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { Menu, X, Search, Heart, Bell, MapPin, ArrowUpRight, Play, CalendarDays, ShieldCheck, Wrench, WalletCards, ChevronRight, Sparkles } from "lucide-react";
-import "@/App.css";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { MessageCircle } from "lucide-react";
+import "./App.css";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-const heroScenes = [
-  ["EXTERIOR / 01", "Arrive somewhere considered", "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=2000&q=90"],
-  ["LIVING ROOM / 02", "Room to gather, room to breathe", "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2000&q=90"],
-  ["KITCHEN / 03", "Details that make a daily ritual", "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2000&q=90"],
-  ["BEDROOM / 04", "A quieter kind of luxury", "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=2000&q=90"],
-];
-const formatINR = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
+import { AuthProvider, useAuth } from "./lib/auth";
+import { ToastProvider } from "./components/ToastProvider";
+import NavBar from "./components/NavBar";
+import Footer from "./components/Footer";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-function Nav({ open, setOpen, onLogin }) { return <header className="nav glass"><Link to="/" className="brand" data-testid="nav-brand"><span className="brand-mark">N</span><span>NEST <b>SERVICES</b></span></Link><nav className={open ? "nav-links open" : "nav-links"}><Link to="/explore" data-testid="nav-explore-rentals">Explore rentals</Link><a href="#story" data-testid="nav-home">The experience</a><Link to="/portal" data-testid="nav-resident-portal">Resident portal</Link><a href="#contact" data-testid="nav-contact">Contact</a><button className="nav-login" onClick={onLogin} data-testid="nav-login">Login <ArrowUpRight size={14}/></button></nav><div className="nav-actions"><Link to="/wishlist" className="icon-btn" data-testid="nav-wishlist"><Heart size={17}/><span className="desktop-only">Wishlist</span></Link><button className="icon-btn" data-testid="nav-notifications"><Bell size={17}/><i>2</i></button><button className="menu-btn" onClick={() => setOpen(!open)} data-testid="mobile-menu-button">{open ? <X/> : <Menu/>}</button></div></header> }
+import Home from "./pages/Home";
+import Explore from "./pages/Explore";
+import PropertyDetail from "./pages/PropertyDetail";
+import Login from "./pages/Login";
+import ResidentPortal from "./pages/ResidentPortal";
+import AdminDashboard from "./pages/AdminDashboard";
+import Wishlist from "./pages/Wishlist";
+import MapPage from "./pages/MapPage";
+import Contact from "./pages/Contact";
+import About from "./pages/About";
+import BookTour from "./pages/BookTour";
+import Notifications from "./pages/Notifications";
+import Apply from "./pages/Apply";
 
-function Walkthrough() { const [progress, setProgress] = useState(0); const [pointer, setPointer] = useState({x:50,y:50}); useEffect(() => { const f=()=>setProgress(Math.min(100, window.scrollY / (window.innerHeight*1.8)*100)); window.addEventListener("scroll",f); return()=>window.removeEventListener("scroll",f); }, []); const scene = heroScenes[Math.min(heroScenes.length-1, Math.floor(progress/25))]; return <section className="walkthrough" id="story" onMouseMove={e=>setPointer({x:e.clientX/window.innerWidth*100,y:e.clientY/window.innerHeight*100})}><div className="scene-stack" style={{"--mx":`${pointer.x}%`,"--my":`${pointer.y}%`}}>{heroScenes.map((s,i)=><img key={s[0]} src={s[2]} className={i===Math.floor(progress/25)?"scene active":"scene"} alt={s[0]}/>)}</div><div className="scene-shade"/><div className="walk-copy"><div className="eyebrow"><span className="gold-dot"/> A NEW WAY TO COME HOME</div><h1>Find a place<br/><em>worth arriving to.</em></h1><p>Scroll to move through The Aria Residence, Kolkata</p><Link to="/explore" className="gold-button" data-testid="hero-explore-button">Explore residences <ArrowUpRight size={16}/></Link></div><div className="scene-label"><span>Now viewing</span><strong data-testid="walkthrough-scene-label">{scene[0]}</strong><small>{scene[1]}</small></div><div className="progress-rail"><span>01</span><div><i style={{height:`${progress}%`}}/></div><span>04</span></div><div className="scroll-hint"><span/> Scroll to explore</div></section> }
+import { api } from "./lib/api";
 
-function PropertyCard({ p, onSelect, onWish, wished }) { return <article className="property-card" data-testid={`property-card-${p.id}`}><div className="property-image"><img src={p.image} alt={p.title}/><span className="status-pill">Available {p.available?.slice(5)}</span><button className={wished?"heart active":"heart"} onClick={()=>onWish(p.id)} data-testid={`property-wishlist-${p.id}`}><Heart size={17} fill={wished?"currentColor":"none"}/></button><div className="image-count"><Sparkles size={12}/> {p.images?.length || 3}</div></div><div className="property-info"><div className="property-top"><div><h3 data-testid={`property-title-${p.id}`}>{p.title}</h3><p><MapPin size={13}/> {p.location}</p></div><strong>{formatINR(p.rent)}<small>/ month</small></strong></div><div className="property-meta"><span>{p.bedrooms} bed</span><span>{p.bathrooms} bath</span><span>{p.furnished}</span><span className="rating">★ {p.rating}</span></div><button className="text-button" onClick={()=>onSelect(p)} data-testid={`view-property-${p.id}`}>View residence <ArrowUpRight size={15}/></button></div></article> }
+function Shell() {
+  const nav = useNavigate();
+  const { user } = useAuth();
+  const [notifCount, setNotifCount] = useState(0);
 
-function Explore({ listings, setSelected, wished, setWished }) { const [q,setQ]=useState(""); const [type,setType]=useState("All types"); const [city,setCity]=useState("All cities"); const [max,setMax]=useState("all"); const filtered=useMemo(()=>listings.filter(p=>(!q||`${p.title} ${p.location} ${p.city}`.toLowerCase().includes(q.toLowerCase()))&&(type==="All types"||p.type===type)&&(city==="All cities"||p.city===city)&&(max==="all"||p.rent<=Number(max))),[listings,q,type,city,max]); return <main className="page-shell explore-page"><div className="page-heading"><div><div className="eyebrow">CURATED RENTALS / INDIA</div><h1>Homes with a<br/><em>point of view.</em></h1></div><p>Thoughtfully selected homes in the cities you want to live in. <b>{listings.length} residences</b></p></div><div className="filter-bar glass"><div className="search-field"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search city, area or property" data-testid="rental-search-input"/></div><select value={city} onChange={e=>setCity(e.target.value)} data-testid="filter-city"><option>All cities</option><option>Kolkata</option><option>Bengaluru</option><option>New Delhi</option><option>Goa</option></select><select value={type} onChange={e=>setType(e.target.value)} data-testid="filter-property-type"><option>All types</option><option>Apartment</option><option>House</option><option>Studio</option><option>Villa</option></select><select value={max} onChange={e=>setMax(e.target.value)} data-testid="filter-price"><option value="all">Any budget</option><option value="30000">Under ₹30K</option><option value="60000">Under ₹60K</option><option value="100000">Under ₹1L</option></select><button className="filter-save" data-testid="save-search-button">Save search <Bell size={14}/></button></div><div className="results-head"><span>Showing <b>{filtered.length}</b> residences</span><button className="map-link" data-testid="map-view-button"><MapPin size={15}/> Map view <ArrowUpRight size={14}/></button></div><div className="property-grid">{filtered.map(p=><PropertyCard key={p.id} p={p} onSelect={setSelected} onWish={id=>setWished(w=>w.includes(id)?w.filter(x=>x!==id):[...w,id])} wished={wished.includes(p.id)}/>)}</div></main> }
+  useEffect(() => {
+    if (!user) { setNotifCount(0); return; }
+    let cancelled = false;
+    const fetchOnce = () => api.get("/api/notifications")
+      .then(({ data }) => { if (!cancelled) setNotifCount(data.filter((n) => n.unread).length); })
+      .catch(() => {});
+    fetchOnce();
+    const t = setInterval(fetchOnce, 30000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [user]);
 
-function Detail({ p, close, onBook }) { const [book,setBook]=useState(false); const [date,setDate]=useState(""); const [time,setTime]=useState("10:00 AM"); const [name,setName]=useState(""); return <div className="modal-backdrop" onClick={close}><div className="detail-modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={close} data-testid="close-property-modal"><X/></button><div className="detail-gallery"><img src={p.image} alt={p.title}/><div className="gallery-strip">{p.images?.map((im,i)=><img key={im} src={im} alt={`${p.title} ${i+1}`}/>)}</div></div><div className="detail-body"><div className="eyebrow">{p.type.toUpperCase()} / {p.city.toUpperCase()}</div><h2>{p.title}</h2><p className="muted"><MapPin size={15}/> {p.location}</p><p>{p.description}</p><div className="detail-stats"><span><b>{formatINR(p.rent)}</b><small>monthly</small></span><span><b>{p.bedrooms}</b><small>bedrooms</small></span><span><b>{p.bathrooms}</b><small>bathrooms</small></span></div><div className="amenities">{p.amenities?.map(a=><span key={a}><ShieldCheck size={14}/> {a}</span>)}</div>{book?<div className="booking-panel"><h3>Book a private tour</h3><input type="date" value={date} onChange={e=>setDate(e.target.value)} data-testid="tour-date-input"/><select value={time} onChange={e=>setTime(e.target.value)} data-testid="tour-time-select"><option>10:00 AM</option><option>1:00 PM</option><option>3:30 PM</option><option>5:00 PM</option></select><input placeholder="Your name" value={name} onChange={e=>setName(e.target.value)} data-testid="tour-name-input"/><button className="gold-button" onClick={()=>{if(date&&name.trim()) { onBook(p,{date,time,name:name.trim()}); setBook(false) }}} data-testid="confirm-tour-button">Confirm tour <CalendarDays size={15}/></button></div>:<div className="detail-actions"><button className="gold-button" onClick={()=>setBook(true)} data-testid="book-tour-button">Book a private tour <CalendarDays size={15}/></button><button className="outline-button" data-testid="apply-property-button">Apply for this home <ArrowUpRight size={15}/></button></div>}</div></div></div> }
+  useEffect(() => {
+    // Lenis smooth scroll — dynamic import so SSR/preload doesn't break
+    let lenis;
+    let raf;
+    let cancelled = false;
+    if (typeof window !== "undefined" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      import("lenis").then(({ default: Lenis }) => {
+        if (cancelled) return;
+        lenis = new Lenis({ duration: 1.1, smoothTouch: false, lerp: 0.1 });
+        const loop = (t) => { lenis.raf(t); raf = requestAnimationFrame(loop); };
+        raf = requestAnimationFrame(loop);
+      }).catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+      if (lenis) lenis.destroy?.();
+    };
+  }, []);
 
-function Portal() { const [tab,setTab]=useState("Overview"); const [sent,setSent]=useState(false); return <main className="page-shell portal-page"><div className="portal-head"><div><div className="eyebrow">RESIDENT PORTAL / WELCOME BACK</div><h1>Your home,<br/><em>all in one place.</em></h1></div><div className="resident-chip"><span>AS</span><div><b>Arjun Sharma</b><small>The Aria Residence</small></div></div></div><div className="portal-tabs">{["Overview","Rent & payments","Maintenance","Lease & documents"].map(t=><button className={tab===t?"active":""} key={t} onClick={()=>setTab(t)} data-testid={`portal-tab-${t.toLowerCase().replaceAll(" ","-")}`}>{t}</button>)}</div>{tab==="Overview"?<><div className="portal-grid"><div className="portal-card rent-card"><div className="card-label">NEXT RENT DUE <span>APR 05, 2026</span></div><strong>{formatINR(42000)}</strong><p>The Aria Residence · Monthly rent</p><button className="gold-button" onClick={()=>setSent(true)} data-testid="pay-rent-button">{sent?"Payment request sent":"Pay rent"} <WalletCards size={15}/></button><div className="demo-note">Demo Payment — No real money will be charged.</div></div><div className="portal-card"><div className="card-label">LEASE EXPIRY <span>14 MONTHS LEFT</span></div><strong>June 30, 2027</strong><p>Fully executed · View agreement</p><button className="text-button" data-testid="view-lease-button">Review lease <ArrowUpRight size={14}/></button></div><div className="portal-card"><div className="card-label">OPEN REQUESTS <span>1 ACTIVE</span></div><strong>Kitchen tap repair</strong><p>Technician scheduled · Tomorrow, 11:30 AM</p><button className="text-button" data-testid="view-maintenance-button">Track request <ArrowUpRight size={14}/></button></div></div><section className="portal-lower"><div><div className="section-kicker">YOUR RESIDENCE</div><h2>The Aria Residence</h2><p className="muted">Alipore, Kolkata · Move-in 01 Apr 2025</p><img className="portal-home" src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1000&q=80" alt="The Aria Residence"/></div><div className="activity"><div className="section-kicker">RECENT ACTIVITY</div>{["Rent payment receipt added","Maintenance request updated","Lease signed by landlord"].map((x,i)=><div className="activity-row" key={x}><span className="activity-icon">{i===0?<WalletCards size={15}/>:i===1?<Wrench size={15}/>:<ShieldCheck size={15}/>}</span><div><b>{x}</b><small>{i===0?"Mar 05, 2026":"Mar 02, 2026"}</small></div><ChevronRight size={15}/></div>)}</div></section></>:<div className="empty-tab"><Sparkles size={24}/><h2>{tab}</h2><p>Your {tab.toLowerCase()} workspace is ready for the next step.</p><button className="outline-button" data-testid="portal-action-button">Open workspace <ArrowUpRight size={14}/></button></div>}</main> }
+  return (
+    <>
+      <NavBar onLoginClick={() => nav("/login")} notifCount={notifCount} />
 
-function Admin() { const [files,setFiles]=useState([]); const [cover,setCover]=useState(0); const chooseFiles=e=>setFiles([...e.target.files].map(file=>({file,url:URL.createObjectURL(file)}))); const removeFile=i=>setFiles(files.filter((_,idx)=>idx!==i)); return <main className="page-shell admin-page"><div className="admin-heading"><div><div className="eyebrow">OWNER CONSOLE / NEST SERVICES</div><h1>Good morning,<br/><em>Meera.</em></h1></div><button className="gold-button" data-testid="add-property-button">Add property <ArrowUpRight size={15}/></button></div><div className="metric-grid">{[["04","Total properties"],["03","Occupied units"],["₹1.86L","Rent collected"],["75%","Occupancy rate"]].map(([a,b])=><div className="metric" key={b}><strong>{a}</strong><span>{b}</span><small>↗ 12% this month</small></div>)}</div><div className="admin-columns"><section className="admin-panel"><div className="panel-head"><div><div className="section-kicker">LISTING MANAGEMENT</div><h2>Your properties</h2></div><button className="text-button" data-testid="manage-listings-button">Manage all <ArrowUpRight size={14}/></button></div>{["The Aria Residence","Cedar House","Mysa Studio"].map((x,i)=><div className="listing-row" key={x}><img src={heroScenes[i%4][2]} alt={x}/><div><b>{x}</b><small>{i===0?"Alipore, Kolkata":"Indiranagar, Bengaluru"}</small></div><span className={i===2?"vacant":"occupied"}>{i===2?"Vacant":"Occupied"}</span><ArrowUpRight size={15}/></div>)}</section><section className="admin-panel upload-panel"><div className="section-kicker">QUICK PUBLISH</div><h2>Upload a new home</h2><p>Add photos from your device and publish a listing in minutes.</p><label className="upload-drop"><input type="file" multiple onChange={chooseFiles} data-testid="property-image-upload"/><Sparkles size={22}/><b>{files.length?`${files.length} images selected`:"Upload images from device"}</b><small>JPG, PNG · Select multiple files</small></label>{files.length>0&&<div className="upload-previews">{files.map((item,i)=><div className={i===cover?"preview selected":"preview"} key={item.url}><img src={item.url} alt={`Upload preview ${i+1}`}/><button onClick={()=>setCover(i)} data-testid={`set-cover-image-${i}`}>{i===cover?"Cover":"Set cover"}</button><button onClick={()=>removeFile(i)} data-testid={`delete-upload-image-${i}`} aria-label={`Delete image ${i+1}`}><X size={12}/></button></div>)}</div>}<button className="outline-button" data-testid="publish-property-button">Save draft <ArrowUpRight size={14}/></button></section></div></main> }
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/property/:id" element={<PropertyDetail />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/tour" element={<ProtectedRoute><BookTour /></ProtectedRoute>} />
+        <Route path="/portal" element={<ProtectedRoute><ResidentPortal /></ProtectedRoute>} />
+        <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="/apply" element={<ProtectedRoute><Apply /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/about" element={<About />} />
+      </Routes>
 
-function Home({ listings, setSelected, wished, setWished, onLogin }) { return <><Walkthrough/><section className="intro-band"><div className="eyebrow">THE NEST STANDARD</div><h2>Renting should feel<br/><em>like a beginning.</em></h2><p>From the first scroll to the first key, Nest Services brings clarity, character, and care to the way India finds home.</p><Link to="/explore" className="text-button" data-testid="intro-explore-link">Discover residences <ArrowUpRight size={15}/></Link></section><section className="featured-section"><div className="section-head"><div><div className="eyebrow">A FEW OF OUR FAVOURITES</div><h2>Homes to come home to.</h2></div><Link to="/explore" className="text-button" data-testid="featured-view-all">View all residences <ArrowUpRight size={15}/></Link></div><div className="property-grid featured-grid">{listings.slice(0,3).map(p=><PropertyCard key={p.id} p={p} onSelect={setSelected} onWish={id=>setWished(w=>w.includes(id)?w.filter(x=>x!==id):[...w,id])} wished={wished.includes(p.id)}/>)}</div></section><section className="why-band"><div><div className="eyebrow">WHY NEST SERVICES</div><h2>More than a<br/><em>place to live.</em></h2></div><div className="why-list">{[["01","Explore differently","A cinematic way to understand the feeling of a home before you visit."],["02","Move with clarity","One considered journey from search to keys in hand."],["03","Stay supported","Thoughtful tools for every chapter after move-in."]].map(([n,t,d])=><div key={n}><span>{n}</span><h3>{t}</h3><p>{d}</p></div>)}</div></section><section className="contact-band" id="contact"><div className="eyebrow">LET'S FIND YOUR PLACE</div><h2>Have a question?<br/><em>We’re here.</em></h2><button className="gold-button" onClick={onLogin} data-testid="contact-start-button">Talk to Nest <ArrowUpRight size={15}/></button></section></> }
+      <Footer />
 
-function App() { const [listings,setListings]=useState([]),[selected,setSelected]=useState(null),[wished,setWished]=useState([]),[open,setOpen]=useState(false),[login,setLogin]=useState(false); useEffect(()=>{axios.get(`${API}/listings`).then(r=>setListings(r.data)).catch(()=>setListings([]))},[]); const book=async (p,details)=>{try { await axios.post(`${API}/bookings`,{listing_id:p.id,date:details.date,time:details.time,name:details.name,phone:"+91 90000 00000"}); alert(`Tour requested for ${details.name} — Nest Services will confirm shortly.`) } catch(e) { alert("We couldn't save that tour yet. Please try again.") }}; return <BrowserRouter><Nav open={open} setOpen={setOpen} onLogin={()=>setLogin(true)}/><Routes><Route path="/" element={<Home listings={listings} setSelected={setSelected} wished={wished} setWished={setWished} onLogin={()=>setLogin(true)}/>}/><Route path="/explore" element={<Explore listings={listings} setSelected={setSelected} wished={wished} setWished={setWished}/>}/><Route path="/portal" element={<Portal/>}/><Route path="/admin" element={<Admin/>}/><Route path="/wishlist" element={<Explore listings={listings.filter(p=>wished.includes(p.id))} setSelected={setSelected} wished={wished} setWished={setWished}/>}/></Routes>{selected&&<Detail p={selected} close={()=>setSelected(null)} onBook={book}/>}<a className="whatsapp" href="https://wa.me/919000000000?text=Hello%20Nest%20Services" target="_blank" rel="noreferrer" data-testid="whatsapp-support-button">WhatsApp <ArrowUpRight size={14}/></a>{login&&<div className="modal-backdrop" onClick={()=>setLogin(false)}><div className="login-modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setLogin(false)} data-testid="close-login-modal"><X/></button><div className="eyebrow">WELCOME TO NEST</div><h2>Find your<br/><em>next chapter.</em></h2><input placeholder="Email address" data-testid="login-email-input"/><button className="gold-button" onClick={()=>setLogin(false)} data-testid="login-submit-button">Continue <ArrowUpRight size={15}/></button><p>Demo access is enabled for this preview.</p></div></div>}<footer><span className="brand">NEST <b>SERVICES</b></span><span>© 2026 Nest Services · Made for living well in India</span><span>₹ INR</span></footer></BrowserRouter> }
-export default App;
+      <a href="https://wa.me/919000000000?text=Hello%20Nest%20Services" target="_blank" rel="noreferrer" className="wa-float" data-testid="whatsapp-support-button">
+        <MessageCircle size={16} /> WhatsApp support
+      </a>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <Shell />
+        </ToastProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}

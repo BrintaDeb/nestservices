@@ -1,120 +1,198 @@
-from fastapi import FastAPI, APIRouter, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel, Field
-from pathlib import Path
+"""Nest Services — FastAPI entry point."""
+from __future__ import annotations
+import os
 from datetime import datetime, timezone
-from typing import Any, Optional
-import os, uuid
+from pathlib import Path
 
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / ".env")
-client = AsyncIOMotorClient(os.environ["MONGO_URL"])
-db = client[os.environ["DB_NAME"]]
-app = FastAPI(title="Nest Services API")
-api = APIRouter(prefix="/api")
+from dotenv import load_dotenv
 
-IMAGES = {
-    "skyline": "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85",
-    "living": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85",
-    "kitchen": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85",
-    "bedroom": "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=85",
+load_dotenv(Path(__file__).parent / ".env")
+
+from fastapi import FastAPI  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+from auth import hash_password, verify_password  # noqa: E402
+from db import close_db, get_db  # noqa: E402
+from routers.auth_router import router as auth_router  # noqa: E402
+from routers.bookings_router import router as bookings_router  # noqa: E402
+from routers.engagement_router import router as engagement_router  # noqa: E402
+from routers.properties_router import router as properties_router  # noqa: E402
+from routers.tenancy_router import router as tenancy_router  # noqa: E402
+from routers.uploads_router import router as uploads_router  # noqa: E402
+
+app = FastAPI(title="Nest Services API", version="2.0.0")
+
+
+# Property seed data — Agartala-focused with a few nearby cities
+IMG = {
+    "aria": "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1600&q=85",
+    "living": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1600&q=85",
+    "kitchen": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1600&q=85",
+    "bedroom": "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1600&q=85",
+    "bath": "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=1600&q=85",
+    "balcony": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1600&q=85",
+    "villa": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=85",
+    "studio": "https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1600&q=85",
+    "facade": "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1600&q=85",
 }
 
-class Listing(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    title: str
-    location: str
-    city: str
-    rent: int
-    deposit: int
-    type: str
-    bedrooms: int
-    bathrooms: int
-    furnished: str
-    pet_friendly: bool
-    available: str
-    rating: float = 4.8
-    likes: int = 0
-    comments: int = 0
-    image: str
-    images: list[str] = []
-    amenities: list[str] = []
-    description: str = ""
-    owner: str = "Nest Services"
 
-class Booking(BaseModel):
-    listing_id: str
-    date: str
-    time: str
-    name: str
-    phone: str
+def _seed_properties() -> list[dict]:
+    now = datetime.now(timezone.utc)
+    def make(**kw):
+        base = {
+            "created_at": now, "updated_at": now, "likes": 0, "comments_count": 0,
+            "rating": 4.7, "status": "available", "rules": ["No smoking", "Quiet hours after 10 PM"],
+            "video_url": None, "tour_3d_url": None,
+        }
+        base.update(kw)
+        base["cover_image"] = base.get("cover_image") or base["images"][0]
+        return base
 
-class Maintenance(BaseModel):
-    property: str
-    category: str
-    title: str
-    description: str
-    priority: str
+    return [
+        make(title="Ujjayanta Residency", description="A calm three-bedroom home minutes from Ujjayanta Palace with double-height ceilings, a landscaped garden and a private study.",
+             property_type="Apartment", city="Agartala", locality="Kunjaban, Agartala",
+             monthly_rent=28000, security_deposit=56000, bedrooms=3, bathrooms=3,
+             furnished="Furnished", pet_friendly=True, available_from="2026-04-01",
+             amenities=["Covered parking", "Power backup", "Modular kitchen", "24x7 water"],
+             images=[IMG["aria"], IMG["living"], IMG["kitchen"], IMG["bedroom"], IMG["balcony"]]),
+        make(title="Rabindra Bhavan Retreat", description="A quiet two-bedroom home tucked away in a leafy lane, walking distance to Rabindra Bhavan and the College Tilla parks.",
+             property_type="Apartment", city="Agartala", locality="College Tilla, Agartala",
+             monthly_rent=18000, security_deposit=36000, bedrooms=2, bathrooms=2,
+             furnished="Semi-furnished", pet_friendly=False, available_from="2026-03-20",
+             amenities=["Lift", "Security", "Balcony", "Piped gas"],
+             images=[IMG["living"], IMG["bedroom"], IMG["kitchen"]]),
+        make(title="Neermahal Courtyard House", description="A four-bedroom courtyard house designed for family life, with a shaded veranda, outdoor dining, and a caretaker.",
+             property_type="House", city="Agartala", locality="Abhoynagar, Agartala",
+             monthly_rent=42000, security_deposit=84000, bedrooms=4, bathrooms=4,
+             furnished="Furnished", pet_friendly=True, available_from="2026-05-01",
+             amenities=["Private garden", "Study", "Solar power", "CCTV"],
+             images=[IMG["villa"], IMG["living"], IMG["kitchen"], IMG["bedroom"], IMG["bath"]]),
+        make(title="Melarmath Studio", description="A light-filled studio a short walk from the Melarmath market — thoughtfully finished with warm oak and stone.",
+             property_type="Studio", city="Agartala", locality="Melarmath, Agartala",
+             monthly_rent=12500, security_deposit=25000, bedrooms=1, bathrooms=1,
+             furnished="Furnished", pet_friendly=False, available_from="2026-03-10",
+             amenities=["WiFi ready", "Co-working lounge", "CCTV"],
+             images=[IMG["studio"], IMG["bedroom"], IMG["kitchen"]]),
+        make(title="Battala Independent Floor", description="A quiet two-bedroom independent floor with a private terrace over the Battala neighbourhood.",
+             property_type="Independent Floor", city="Agartala", locality="Battala, Agartala",
+             monthly_rent=22000, security_deposit=44000, bedrooms=2, bathrooms=2,
+             furnished="Semi-furnished", pet_friendly=True, available_from="2026-04-15",
+             amenities=["Terrace", "Two-wheeler parking", "Piped gas"],
+             images=[IMG["facade"], IMG["living"], IMG["balcony"]]),
+        make(title="Airport Road Villa", description="A generous three-bedroom villa with a walled garden, ideal for longer stays close to Agartala airport.",
+             property_type="Villa", city="Agartala", locality="Airport Road, Agartala",
+             monthly_rent=55000, security_deposit=110000, bedrooms=3, bathrooms=3,
+             furnished="Furnished", pet_friendly=True, available_from="2026-06-01",
+             amenities=["Private garden", "Backup generator", "Caretaker", "Solar water"],
+             images=[IMG["villa"], IMG["kitchen"], IMG["balcony"], IMG["bedroom"]]),
+        make(title="Guwahati Riverfront Apartment", description="A three-bedroom apartment overlooking the Brahmaputra with river-facing balconies.",
+             property_type="Apartment", city="Guwahati", locality="Uzan Bazaar, Guwahati",
+             monthly_rent=35000, security_deposit=70000, bedrooms=3, bathrooms=3,
+             furnished="Furnished", pet_friendly=True, available_from="2026-04-05",
+             amenities=["Concierge", "Gym", "Backup power", "Lift"],
+             images=[IMG["aria"], IMG["living"], IMG["kitchen"]]),
+        make(title="Shillong Pine House", description="A two-bedroom pine-lined home in the hills, minutes from Ward's Lake.",
+             property_type="House", city="Shillong", locality="Laitumkhrah, Shillong",
+             monthly_rent=32000, security_deposit=64000, bedrooms=2, bathrooms=2,
+             furnished="Furnished", pet_friendly=True, available_from="2026-05-15",
+             amenities=["Fireplace", "Wooden interiors", "Garden", "Parking"],
+             images=[IMG["villa"], IMG["bedroom"], IMG["living"]]),
+    ]
 
-class Contact(BaseModel):
-    name: str
-    email: str
-    subject: str
-    message: str
 
-async def seed():
-    if await db.listings.count_documents({}) == 0:
-        rows = [
-            Listing(title="The Aria Residence", location="Alipore, Kolkata", city="Kolkata", rent=42000, deposit=84000, type="Apartment", bedrooms=3, bathrooms=3, furnished="Furnished", pet_friendly=True, available="2026-04-01", image=IMAGES["living"], images=[IMAGES["living"], IMAGES["kitchen"], IMAGES["bedroom"]], amenities=["Concierge", "Private parking", "Gym", "Power backup"], description="A light-filled, fully furnished residence with considered materials and a quiet garden outlook."),
-            Listing(title="Cedar House", location="Indiranagar, Bengaluru", city="Bengaluru", rent=68000, deposit=136000, type="House", bedrooms=4, bathrooms=4, furnished="Semi-furnished", pet_friendly=True, available="2026-03-15", image=IMAGES["skyline"], images=[IMAGES["skyline"], IMAGES["kitchen"], IMAGES["living"]], amenities=["Private garden", "Study", "Solar power", "Security"], description="A contemporary family home close to the best of Indiranagar, designed for slower mornings and longer stays."),
-            Listing(title="Mysa Studio", location="Hauz Khas, New Delhi", city="New Delhi", rent=25000, deposit=50000, type="Studio", bedrooms=1, bathrooms=1, furnished="Furnished", pet_friendly=False, available="2026-05-01", image=IMAGES["bedroom"], images=[IMAGES["bedroom"], IMAGES["living"]], amenities=["Co-working lounge", "Lift", "WiFi ready", "CCTV"], description="A refined studio with warm wood, generous light, and a community that feels like home."),
-            Listing(title="Solara Villa", location="Assagao, Goa", city="Goa", rent=95000, deposit=190000, type="Villa", bedrooms=3, bathrooms=3, furnished="Furnished", pet_friendly=True, available="2026-06-01", image=IMAGES["kitchen"], images=[IMAGES["kitchen"], IMAGES["living"], IMAGES["skyline"]], amenities=["Pool", "Outdoor dining", "Caretaker", "Backup generator"], description="An indoor-outdoor villa for extended stays, with a private pool and a calm tropical rhythm."),
-        ]
-        await db.listings.insert_many([x.model_dump() for x in rows])
+async def _seed_admin_and_user(db):
+    admin_email = os.environ["ADMIN_EMAIL"].lower()
+    admin_password = os.environ["ADMIN_PASSWORD"]
+    existing = await db.users.find_one({"email": admin_email})
+    if existing is None:
+        await db.users.insert_one({
+            "email": admin_email,
+            "name": "Nest Services Admin",
+            "phone": "+91 90000 00000",
+            "password_hash": hash_password(admin_password),
+            "role": "admin",
+            "created_at": datetime.now(timezone.utc),
+        })
+    elif not verify_password(admin_password, existing["password_hash"]):
+        await db.users.update_one({"email": admin_email},
+                                  {"$set": {"password_hash": hash_password(admin_password),
+                                            "role": "admin"}})
+
+    demo_email = os.environ["DEMO_USER_EMAIL"].lower()
+    demo_password = os.environ["DEMO_USER_PASSWORD"]
+    existing_user = await db.users.find_one({"email": demo_email})
+    if existing_user is None:
+        await db.users.insert_one({
+            "email": demo_email,
+            "name": "Tanya Debbarma",
+            "phone": "+91 98000 12345",
+            "password_hash": hash_password(demo_password),
+            "role": "user",
+            "created_at": datetime.now(timezone.utc),
+        })
+    elif not verify_password(demo_password, existing_user["password_hash"]):
+        await db.users.update_one({"email": demo_email},
+                                  {"$set": {"password_hash": hash_password(demo_password)}})
+
 
 @app.on_event("startup")
-async def startup(): await seed()
+async def _startup():
+    db = get_db()
+    await db.users.create_index("email", unique=True)
+    await db.wishlist.create_index([("user_id", 1), ("property_id", 1)], unique=True)
+    await db.login_attempts.create_index("identifier")
+    await db.notifications.create_index("user_id")
+    await db.properties.create_index("city")
+    await db.properties.create_index("monthly_rent")
 
-@api.get("/")
-async def root(): return {"message": "Nest Services is ready"}
+    if await db.properties.count_documents({}) == 0:
+        await db.properties.insert_many(_seed_properties())
 
-@api.get("/listings", response_model=list[Listing])
-async def listings(q: Optional[str] = None, city: Optional[str] = None, max_rent: Optional[int] = None, property_type: Optional[str] = None, bedrooms: Optional[int] = None):
-    query: dict[str, Any] = {}
-    if q: query["$or"] = [{"title": {"$regex": q, "$options": "i"}}, {"location": {"$regex": q, "$options": "i"}}, {"city": {"$regex": q, "$options": "i"}}]
-    if city and city != "All cities": query["city"] = city
-    if max_rent: query["rent"] = {"$lte": max_rent}
-    if property_type and property_type != "All types": query["type"] = property_type
-    if bedrooms: query["bedrooms"] = {"$gte": bedrooms}
-    rows = await db.listings.find(query, {"_id": 0}).to_list(100)
-    return rows
+    await _seed_admin_and_user(db)
 
-@api.post("/listings", response_model=Listing)
-async def create_listing(item: Listing):
-    await db.listings.insert_one(item.model_dump()); return item
-
-@api.post("/bookings")
-async def booking(item: Booking):
-    doc = item.model_dump(); doc["id"] = str(uuid.uuid4()); doc["created_at"] = datetime.now(timezone.utc).isoformat()
-    await db.bookings.insert_one(doc); return {"ok": True, "id": doc["id"]}
-
-@api.post("/maintenance")
-async def maintenance(item: Maintenance):
-    doc = item.model_dump(); doc["id"] = str(uuid.uuid4()); doc["status"] = "Submitted"; doc["created_at"] = datetime.now(timezone.utc).isoformat()
-    await db.maintenance.insert_one(doc); return {"ok": True, "request": {k: v for k, v in doc.items() if k != "_id"}}
-
-@api.post("/contact")
-async def contact(item: Contact):
-    doc = item.model_dump(); doc["created_at"] = datetime.now(timezone.utc).isoformat(); await db.contacts.insert_one(doc); return {"ok": True}
-
-@api.get("/notifications")
-async def notifications():
-    return [{"id": "n1", "title": "New matching residence", "body": "The Aria Residence is now available for your saved search.", "time": "12 min ago", "unread": True}, {"id": "n2", "title": "Tour confirmed", "body": "Your Aria Residence visit is ready to review.", "time": "Yesterday", "unread": False}]
-
-app.include_router(api)
-app.add_middleware(CORSMiddleware, allow_credentials=True, allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","), allow_methods=["*"], allow_headers=["*"])
 
 @app.on_event("shutdown")
-async def shutdown(): client.close()
+async def _shutdown():
+    close_db()
+
+
+# Health
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "service": "nest-services", "time": datetime.now(timezone.utc).isoformat()}
+
+
+@app.get("/api/")
+async def root():
+    return {"message": "Nest Services API — find your nest, secure your space."}
+
+
+# Register routers
+app.include_router(auth_router)
+app.include_router(properties_router)
+app.include_router(uploads_router)
+app.include_router(bookings_router)
+app.include_router(engagement_router)
+app.include_router(tenancy_router)
+
+
+# CORS — same-origin via ingress. Allow explicit origin so credentials cookies work.
+_frontend_origin = os.environ.get("FRONTEND_URL")
+_origins_env = os.environ.get("CORS_ORIGINS", "").strip()
+if _frontend_origin:
+    allow_origins = [_frontend_origin]
+elif _origins_env and _origins_env != "*":
+    allow_origins = [o.strip() for o in _origins_env.split(",") if o.strip()]
+else:
+    # Wildcard is fine here because the browser sees frontend + backend on the same
+    # origin via ingress; cross-origin credentialed calls are not required in production.
+    allow_origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allow_origins,
+    allow_credentials=(allow_origins != ["*"]),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
