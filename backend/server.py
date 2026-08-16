@@ -19,6 +19,7 @@ from routers.engagement_router import router as engagement_router  # noqa: E402
 from routers.properties_router import router as properties_router  # noqa: E402
 from routers.tenancy_router import router as tenancy_router  # noqa: E402
 from routers.uploads_router import router as uploads_router  # noqa: E402
+from routers.ai_router import router as ai_router  # noqa: E402
 
 app = FastAPI(title="Nest Services API", version="2.0.0")
 
@@ -54,48 +55,56 @@ def _seed_properties() -> list[dict]:
              property_type="Apartment", city="Agartala", locality="Kunjaban, Agartala",
              monthly_rent=28000, security_deposit=56000, bedrooms=3, bathrooms=3,
              furnished="Furnished", pet_friendly=True, available_from="2026-04-01",
+             lat=23.8479, lng=91.2765,
              amenities=["Covered parking", "Power backup", "Modular kitchen", "24x7 water"],
              images=[IMG["aria"], IMG["living"], IMG["kitchen"], IMG["bedroom"], IMG["balcony"]]),
         make(title="Rabindra Bhavan Retreat", description="A quiet two-bedroom home tucked away in a leafy lane, walking distance to Rabindra Bhavan and the College Tilla parks.",
              property_type="Apartment", city="Agartala", locality="College Tilla, Agartala",
              monthly_rent=18000, security_deposit=36000, bedrooms=2, bathrooms=2,
              furnished="Semi-furnished", pet_friendly=False, available_from="2026-03-20",
+             lat=23.8341, lng=91.2812,
              amenities=["Lift", "Security", "Balcony", "Piped gas"],
              images=[IMG["living"], IMG["bedroom"], IMG["kitchen"]]),
         make(title="Neermahal Courtyard House", description="A four-bedroom courtyard house designed for family life, with a shaded veranda, outdoor dining, and a caretaker.",
              property_type="House", city="Agartala", locality="Abhoynagar, Agartala",
              monthly_rent=42000, security_deposit=84000, bedrooms=4, bathrooms=4,
              furnished="Furnished", pet_friendly=True, available_from="2026-05-01",
+             lat=23.8225, lng=91.2734,
              amenities=["Private garden", "Study", "Solar power", "CCTV"],
              images=[IMG["villa"], IMG["living"], IMG["kitchen"], IMG["bedroom"], IMG["bath"]]),
         make(title="Melarmath Studio", description="A light-filled studio a short walk from the Melarmath market — thoughtfully finished with warm oak and stone.",
              property_type="Studio", city="Agartala", locality="Melarmath, Agartala",
              monthly_rent=12500, security_deposit=25000, bedrooms=1, bathrooms=1,
              furnished="Furnished", pet_friendly=False, available_from="2026-03-10",
+             lat=23.8395, lng=91.2833,
              amenities=["WiFi ready", "Co-working lounge", "CCTV"],
              images=[IMG["studio"], IMG["bedroom"], IMG["kitchen"]]),
         make(title="Battala Independent Floor", description="A quiet two-bedroom independent floor with a private terrace over the Battala neighbourhood.",
              property_type="Independent Floor", city="Agartala", locality="Battala, Agartala",
              monthly_rent=22000, security_deposit=44000, bedrooms=2, bathrooms=2,
              furnished="Semi-furnished", pet_friendly=True, available_from="2026-04-15",
+             lat=23.8298, lng=91.2887,
              amenities=["Terrace", "Two-wheeler parking", "Piped gas"],
              images=[IMG["facade"], IMG["living"], IMG["balcony"]]),
         make(title="Airport Road Villa", description="A generous three-bedroom villa with a walled garden, ideal for longer stays close to Agartala airport.",
              property_type="Villa", city="Agartala", locality="Airport Road, Agartala",
              monthly_rent=55000, security_deposit=110000, bedrooms=3, bathrooms=3,
              furnished="Furnished", pet_friendly=True, available_from="2026-06-01",
+             lat=23.8867, lng=91.2404,
              amenities=["Private garden", "Backup generator", "Caretaker", "Solar water"],
              images=[IMG["villa"], IMG["kitchen"], IMG["balcony"], IMG["bedroom"]]),
         make(title="Guwahati Riverfront Apartment", description="A three-bedroom apartment overlooking the Brahmaputra with river-facing balconies.",
              property_type="Apartment", city="Guwahati", locality="Uzan Bazaar, Guwahati",
              monthly_rent=35000, security_deposit=70000, bedrooms=3, bathrooms=3,
              furnished="Furnished", pet_friendly=True, available_from="2026-04-05",
+             lat=26.1836, lng=91.7539,
              amenities=["Concierge", "Gym", "Backup power", "Lift"],
              images=[IMG["aria"], IMG["living"], IMG["kitchen"]]),
         make(title="Shillong Pine House", description="A two-bedroom pine-lined home in the hills, minutes from Ward's Lake.",
              property_type="House", city="Shillong", locality="Laitumkhrah, Shillong",
              monthly_rent=32000, security_deposit=64000, bedrooms=2, bathrooms=2,
              furnished="Furnished", pet_friendly=True, available_from="2026-05-15",
+             lat=25.5695, lng=91.8853,
              amenities=["Fireplace", "Wooden interiors", "Garden", "Parking"],
              images=[IMG["villa"], IMG["bedroom"], IMG["living"]]),
     ]
@@ -148,6 +157,13 @@ async def _startup():
 
     if await db.properties.count_documents({}) == 0:
         await db.properties.insert_many(_seed_properties())
+    else:
+        # Backfill lat/lng and status for previously-seeded properties (idempotent)
+        for seed in _seed_properties():
+            await db.properties.update_one(
+                {"title": seed["title"], "city": seed["city"], "$or": [{"lat": {"$exists": False}}, {"lat": None}]},
+                {"$set": {"lat": seed.get("lat"), "lng": seed.get("lng")}},
+            )
 
     await _seed_admin_and_user(db)
 
@@ -175,6 +191,7 @@ app.include_router(uploads_router)
 app.include_router(bookings_router)
 app.include_router(engagement_router)
 app.include_router(tenancy_router)
+app.include_router(ai_router)
 
 
 # CORS — same-origin via ingress. Allow explicit origin so credentials cookies work.

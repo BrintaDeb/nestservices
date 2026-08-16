@@ -5,7 +5,7 @@ import { api, formatINR, toApiError } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useToast } from "../components/ToastProvider";
 
-const TABS = ["Overview", "Wishlist", "Tours", "Applications", "Maintenance", "Notifications"];
+const TABS = ["Overview", "Wishlist", "Tours", "Applications", "Maintenance", "Saved searches", "Notifications"];
 
 export default function ResidentPortal() {
   const { user } = useAuth();
@@ -15,19 +15,21 @@ export default function ResidentPortal() {
   const [apps, setApps] = useState([]);
   const [maint, setMaint] = useState([]);
   const [notifs, setNotifs] = useState([]);
+  const [savedSearches, setSavedSearches] = useState([]);
   const [reqForm, setReqForm] = useState({ property_id: "", category: "Plumbing", title: "", description: "", priority: "Medium" });
   const toast = useToast();
 
   const load = async () => {
     try {
-      const [w, t, a, m, n] = await Promise.all([
+      const [w, t, a, m, n, s] = await Promise.all([
         api.get("/api/wishlist"),
         api.get("/api/bookings/mine"),
         api.get("/api/applications/mine"),
         api.get("/api/maintenance/mine"),
         api.get("/api/notifications"),
+        api.get("/api/saved-searches"),
       ]);
-      setWishlist(w.data); setTours(t.data); setApps(a.data); setMaint(m.data); setNotifs(n.data);
+      setWishlist(w.data); setTours(t.data); setApps(a.data); setMaint(m.data); setNotifs(n.data); setSavedSearches(s.data);
     } catch (e) { toast.push(toApiError(e)); }
   };
   useEffect(() => { load(); }, []);
@@ -166,6 +168,36 @@ export default function ResidentPortal() {
             </select>
             <button className="btn-primary w-full justify-center" data-testid="maint-submit"><Wrench size={14} /> Submit request</button>
           </form>
+        </div>
+      )}
+
+      {tab === "Saved searches" && (
+        <div className="mt-8 space-y-3">
+          {savedSearches.length === 0 && <EmptyState label="No saved searches yet. Save one from the Explore page to get alerts on new matches." />}
+          {savedSearches.map((s) => (
+            <div key={s.id} className="p-5 border border-nest-sand bg-white flex flex-wrap items-center gap-4" data-testid={`portal-saved-${s.id}`}>
+              <div className="flex-1">
+                <b className="font-display text-nest-char">{s.name}</b>
+                <div className="text-body text-[12px] mt-1">
+                  {Object.entries(s.query || {}).filter(([, v]) => v !== "" && v !== null && v !== undefined).map(([k, v]) => (
+                    <span key={k} className="chip mr-1 !py-1 !px-2 !text-[10px]">{k}: {String(v)}</span>
+                  ))}
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-[12px] font-mono-sm text-nest-clay">
+                <input type="checkbox" checked={s.alerts_enabled !== false}
+                       onChange={async (e) => {
+                         try { await api.patch(`/api/saved-searches/${s.id}`, { alerts_enabled: e.target.checked }); load(); }
+                         catch (err) { toast.push(toApiError(err)); }
+                       }}
+                       data-testid={`portal-saved-alerts-${s.id}`} />
+                Alerts
+              </label>
+              <button className="btn-ghost text-red-600"
+                      onClick={async () => { try { await api.delete(`/api/saved-searches/${s.id}`); toast.push("Deleted"); load(); } catch (err) { toast.push(toApiError(err)); } }}
+                      data-testid={`portal-saved-delete-${s.id}`}>Remove</button>
+            </div>
+          ))}
         </div>
       )}
 

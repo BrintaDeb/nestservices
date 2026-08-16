@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from auth import get_current_user_optional, require_admin
 from db import get_db
 from models import PropertyIn
+from services.alerts import dispatch_new_property_alerts
 
 router = APIRouter(prefix="/api/properties", tags=["properties"])
 
@@ -109,7 +110,13 @@ async def create_property(payload: PropertyIn, _admin=Depends(require_admin)):
         doc["cover_image"] = doc["images"][0]
     result = await db.properties.insert_one(doc)
     doc["_id"] = result.inserted_id
-    return _serialize(doc)
+    created = _serialize(doc)
+    # Fire saved-search alerts (in-app + optional email)
+    try:
+        await dispatch_new_property_alerts(created)
+    except Exception:
+        pass
+    return created
 
 
 @router.put("/{property_id}")

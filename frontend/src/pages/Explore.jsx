@@ -84,8 +84,9 @@ export default function Explore() {
     if (!user) return toast.push("Sign in to save this search.");
     try {
       const name = [city !== "All cities" && city, bedrooms && `${bedrooms}BHK`, maxRent && `under ₹${Number(maxRent).toLocaleString("en-IN")}`].filter(Boolean).join(" · ") || "Custom search";
-      await api.post("/api/saved-searches", { name, query });
-      toast.push("Search saved. We'll notify you about new matches.");
+      const { data } = await api.post("/api/saved-searches", { name, query });
+      const suffix = typeof data?.match_count === "number" ? ` · ${data.match_count} match${data.match_count === 1 ? "" : "es"} today` : "";
+      toast.push(`Search saved${suffix}. We'll email you when a matching home is listed.`);
     } catch (e) { toast.push(toApiError(e)); }
   };
 

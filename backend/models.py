@@ -49,6 +49,8 @@ class PropertyIn(BaseModel):
     tour_3d_url: Optional[str] = None
     rating: float = 4.7
     status: str = "available"  # available | occupied | draft
+    lat: Optional[float] = None
+    lng: Optional[float] = None
 
 
 # ----- Bookings / Applications / Maintenance -----

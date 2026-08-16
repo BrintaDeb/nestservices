@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from auth import get_current_user, require_admin
 from db import get_db
 from models import CommentIn, ContactIn, SavedSearchIn, WishlistToggleIn
+from services.alerts import _matches
 
 router = APIRouter(tags=["engagement"])
 
@@ -52,9 +53,27 @@ async def saved_search_create(payload: SavedSearchIn, user: dict = Depends(get_c
     doc = {"user_id": user["id"], "name": payload.name, "query": payload.query,
            "alerts_enabled": True, "created_at": datetime.now(timezone.utc)}
     result = await db.saved_searches.insert_one(doc)
+    # Preview count for current matches
+    props = await db.properties.find({"status": {"$ne": "draft"}}).to_list(500)
+    matches = sum(1 for p in props if _matches(payload.query or {}, p))
     doc["id"] = str(result.inserted_id)
     doc.pop("_id", None)
+    doc["match_count"] = matches
     return doc
+
+
+@router.patch("/api/saved-searches/{sid}")
+async def saved_search_update(sid: str, payload: dict, user: dict = Depends(get_current_user)):
+    db = get_db()
+    allowed = {k: v for k, v in payload.items() if k in ("name", "alerts_enabled")}
+    if not allowed:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No allowed fields to update")
+    result = await db.saved_searches.update_one(
+        {"_id": ObjectId(sid), "user_id": user["id"]}, {"$set": allowed}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Saved search not found")
+    return {"ok": True}
 
 
 @router.get("/api/saved-searches")
