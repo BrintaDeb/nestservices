@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from auth import get_current_user, require_admin
 from db import get_db
 from models import ApplicationIn, MaintenanceIn, StatusUpdateIn
+from timezones import now_ist
 
 router = APIRouter(tags=["tenancy"])
 
@@ -28,14 +29,14 @@ async def submit_application(payload: ApplicationIn, user: dict = Depends(get_cu
     doc["user_id"] = user["id"]
     doc["status"] = "Submitted"
     doc["screening_status"] = "Consent Required"
-    doc["created_at"] = datetime.now(timezone.utc)
+    doc["created_at"] = now_ist()
     result = await db.applications.insert_one(doc)
     await db.notifications.insert_one({
         "user_id": user["id"],
         "title": "Application submitted",
         "body": "Your rental application is under review by Nest Services.",
         "unread": True,
-        "created_at": datetime.now(timezone.utc),
+        "created_at": now_ist(),
     })
     doc["_id"] = result.inserted_id
     return _s(doc)
@@ -58,7 +59,7 @@ async def all_applications(_admin=Depends(require_admin)):
 @router.patch("/api/applications/{aid}")
 async def update_application(aid: str, payload: StatusUpdateIn, _admin=Depends(require_admin)):
     db = get_db()
-    update = {"status": payload.status, "note": payload.note, "updated_at": datetime.now(timezone.utc)}
+    update = {"status": payload.status, "note": payload.note, "updated_at": now_ist()}
     result = await db.applications.update_one({"_id": ObjectId(aid)}, {"$set": update})
     if result.matched_count == 0:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Application not found")
@@ -68,7 +69,7 @@ async def update_application(aid: str, payload: StatusUpdateIn, _admin=Depends(r
         "title": f"Application {payload.status}",
         "body": f"Your application status is now {payload.status}.",
         "unread": True,
-        "created_at": datetime.now(timezone.utc),
+        "created_at": now_ist(),
     })
     return _s(doc)
 
@@ -80,7 +81,7 @@ async def create_maintenance(payload: MaintenanceIn, user: dict = Depends(get_cu
     doc = payload.model_dump()
     doc["user_id"] = user["id"]
     doc["status"] = "Submitted"
-    doc["created_at"] = datetime.now(timezone.utc)
+    doc["created_at"] = now_ist()
     result = await db.maintenance.insert_one(doc)
     doc["_id"] = result.inserted_id
     return _s(doc)

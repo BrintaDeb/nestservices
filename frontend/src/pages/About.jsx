@@ -1,16 +1,14 @@
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
+import { useSettings } from "../lib/settings";
 
 export default function About() {
+  const { t } = useSettings();
   return (
     <main className="container-nest pt-28 pb-20">
       <div className="kicker">About Nest</div>
       <h1 className="headline-lg mt-4 text-nest-char">A calmer way to rent<br /><em className="not-italic text-nest-terra font-normal">in India.</em></h1>
-      <p className="text-body mt-6 max-w-2xl text-[16px] leading-[1.7]">
-        Nest Services is a modern rental home for renters, landlords and property teams. Built from Agartala for the country, we bring a
-        cinematic way to feel a home before you visit, a considered marketplace of curated residences, and a calm portal that quietly
-        handles rent, maintenance and messages after move-in.
-      </p>
+      <p className="text-body mt-6 max-w-2xl text-[16px] leading-[1.7]">{t("about.body")}</p>
 
       <div className="mt-14 grid md:grid-cols-3 gap-6">
         {[

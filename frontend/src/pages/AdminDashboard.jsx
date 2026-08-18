@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, Plus, Trash2, Upload, X, Star, Home as HomeIcon, Users, Wrench, CalendarDays, FileText } from "lucide-react";
 import { api, assetUrl, formatINR, toApiError } from "../lib/api";
 import { useToast } from "../components/ToastProvider";
+import SiteContentEditor from "../components/SiteContentEditor";
 
-const TABS = ["Dashboard", "Properties", "Users", "Applications", "Tours", "Maintenance"];
+const TABS = ["Dashboard", "Properties", "Users", "Applications", "Tours", "Maintenance", "Site content"];
 
 const EMPTY = {
   title: "", description: "", property_type: "Apartment", city: "Agartala", locality: "",
@@ -162,6 +163,8 @@ export default function AdminDashboard() {
           ))}
         </div>
       )}
+
+      {tab === "Site content" && <SiteContentEditor />}
 
       {editing && (
         <PropertyEditor value={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} />

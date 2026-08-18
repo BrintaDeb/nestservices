@@ -1,15 +1,17 @@
 import { Link } from "react-router-dom";
+import { useSettings } from "../lib/settings";
 
 export default function Footer() {
+  const { t } = useSettings();
   return (
     <footer className="mt-24 border-t border-nest-sand">
       <div className="container-nest py-14 grid gap-10 md:grid-cols-4 text-[13px]">
         <div>
           <div className="flex items-center gap-3">
             <span className="w-8 h-8 grid place-items-center border border-nest-char text-nest-char font-display">N</span>
-            <span className="font-display text-[13px] tracking-[0.24em] uppercase text-nest-char">Nest Services</span>
+            <span className="font-display text-[13px] tracking-[0.24em] uppercase text-nest-char">{t("brand.name")}</span>
           </div>
-          <p className="text-body mt-4 max-w-xs">Find your nest, secure your space. India's cinematic rental home for renters and landlords.</p>
+          <p className="text-body mt-4 max-w-xs">{t("footer.about")}</p>
         </div>
         <div>
           <div className="kicker">Discover</div>
@@ -31,17 +33,17 @@ export default function Footer() {
         <div>
           <div className="kicker">Contact</div>
           <ul className="mt-4 space-y-2 text-body">
-            <li>Agartala, Tripura</li>
-            <li>hello@nestservices.in</li>
-            <li>+91 90000 00000</li>
+            <li>{t("contact.address")}</li>
+            <li>{t("contact.email")}</li>
+            <li>{t("contact.phone")}</li>
           </ul>
         </div>
       </div>
       <div className="hairline">
         <div className="container-nest py-6 flex flex-col md:flex-row items-center justify-between gap-2 text-[11px] font-mono-sm">
-          <span>© 2026 Nest Services</span>
-          <span>Find your nest — secure your space</span>
-          <span>₹ INR</span>
+          <span>{t("footer.copyright")}</span>
+          <span>{t("brand.tagline")}</span>
+          <span>₹ INR · IST</span>
         </div>
       </div>
     </footer>

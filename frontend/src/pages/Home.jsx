@@ -5,12 +5,14 @@ import { api, toApiError } from "../lib/api";
 import Walkthrough from "../components/Walkthrough";
 import PropertyCard from "../components/PropertyCard";
 import { useAuth } from "../lib/auth";
+import { useSettings } from "../lib/settings";
 import { useToast } from "../components/ToastProvider";
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [wished, setWished] = useState([]);
   const { user } = useAuth();
+  const { t } = useSettings();
   const toast = useToast();
 
   useEffect(() => {
@@ -40,14 +42,11 @@ export default function Home() {
       {/* Intro */}
       <section className="container-nest pt-32 pb-24 grid md:grid-cols-2 gap-16 items-end">
         <div>
-          <div className="kicker">The Nest promise</div>
-          <h2 className="headline-lg mt-6 text-nest-char">Renting should feel<br /><em className="not-italic text-nest-terra font-normal">like a beginning.</em></h2>
+          <div className="kicker">{t("home.hero_kicker")}</div>
+          <h2 className="headline-lg mt-6 text-nest-char">{t("home.hero_title")}<br /><em className="not-italic text-nest-terra font-normal">{t("home.hero_title_em")}</em></h2>
         </div>
         <div>
-          <p className="text-body max-w-md text-[16px]">
-            Nest Services is a considered rental home for India — a cinematic way to discover residences, a modern marketplace, and a
-            calm portal for the life that follows move-in.
-          </p>
+          <p className="text-body max-w-md text-[16px]">{t("home.hero_body")}</p>
           <Link to="/explore" className="mt-8 inline-flex items-center gap-2 text-nest-terra font-display link-underline" data-testid="intro-explore-link">
             Discover residences <ArrowUpRight size={14} />
           </Link>
@@ -118,7 +117,7 @@ export default function Home() {
       {/* CTA band */}
       <section className="container-nest py-28 text-center">
         <div className="kicker justify-center inline-flex">Ready when you are</div>
-        <h2 className="headline-lg mt-6 text-nest-char">Find your nest.<br /><em className="not-italic text-nest-terra font-normal">Secure your space.</em></h2>
+        <h2 className="headline-lg mt-6 text-nest-char">{t("home.cta_title")}<br /><em className="not-italic text-nest-terra font-normal">{t("home.cta_title_em")}</em></h2>
         <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
           <Link to="/explore" className="btn-primary" data-testid="cta-explore">Explore rentals <ArrowUpRight size={14} /></Link>
           <Link to="/tour" className="btn-outline" data-testid="cta-tour">Book a tour <ArrowUpRight size={14} /></Link>

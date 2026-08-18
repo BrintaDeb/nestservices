@@ -9,6 +9,7 @@ from auth import get_current_user_optional, require_admin
 from db import get_db
 from models import PropertyIn
 from services.alerts import dispatch_new_property_alerts
+from timezones import now_ist
 
 router = APIRouter(prefix="/api/properties", tags=["properties"])
 
@@ -102,7 +103,7 @@ async def get_property(property_id: str, current=Depends(get_current_user_option
 async def create_property(payload: PropertyIn, _admin=Depends(require_admin)):
     db = get_db()
     doc = payload.model_dump()
-    doc["created_at"] = datetime.now(timezone.utc)
+    doc["created_at"] = now_ist()
     doc["updated_at"] = doc["created_at"]
     doc["likes"] = 0
     doc["comments_count"] = 0
@@ -123,7 +124,7 @@ async def create_property(payload: PropertyIn, _admin=Depends(require_admin)):
 async def update_property(property_id: str, payload: PropertyIn, _admin=Depends(require_admin)):
     db = get_db()
     doc = payload.model_dump()
-    doc["updated_at"] = datetime.now(timezone.utc)
+    doc["updated_at"] = now_ist()
     if not doc.get("cover_image") and doc.get("images"):
         doc["cover_image"] = doc["images"][0]
     result = await db.properties.update_one({"_id": ObjectId(property_id)}, {"$set": doc})

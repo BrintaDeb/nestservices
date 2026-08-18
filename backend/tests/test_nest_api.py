@@ -148,14 +148,20 @@ def test_logout(user_token):
 
 
 def test_brute_force_lockout():
-    # Use unique email so we don't pollute the real accounts' counter
+    """Under-threshold stays 401, over-threshold (>50) returns 429.
+    FAIL_LIMIT was raised from 5 → 50 (soft anti-bot guard)."""
     email = f"lock_{uuid.uuid4().hex[:6]}@example.com"
+    headers = {"X-Forwarded-For": f"203.0.113.{uuid.uuid4().int % 250 + 1}"}
+    # Well under the limit — every attempt should be 401, never 429.
+    for _ in range(5):
+        r = requests.post(f"{API}/auth/login", json={"email": email, "password": "bad"}, headers=headers)
+        assert r.status_code == 401, f"unexpected {r.status_code} under threshold"
+    # Push past the limit to trigger the 429 lockout.
     codes = []
-    for _ in range(6):
-        r = requests.post(f"{API}/auth/login", json={"email": email, "password": "bad"})
+    for _ in range(55):
+        r = requests.post(f"{API}/auth/login", json={"email": email, "password": "bad"}, headers=headers)
         codes.append(r.status_code)
-    # after 5 fails, should include 429
-    assert 429 in codes, f"expected 429 in {codes}"
+    assert 429 in codes, f"expected 429 after 50+ attempts; got {codes[-10:]}"
 
 
 # ---------- Property CRUD RBAC ----------

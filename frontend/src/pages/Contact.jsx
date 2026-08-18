@@ -2,14 +2,17 @@ import { useState } from "react";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import { api, toApiError } from "../lib/api";
 import { useToast } from "../components/ToastProvider";
+import { useSettings } from "../lib/settings";
 
 export default function Contact() {
+  const { t } = useSettings();
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "General enquiry", message: "" });
   const [busy, setBusy] = useState(false);
   const toast = useToast();
 
   const submit = async (e) => {
     e.preventDefault();
+    if (form.phone.trim().length < 6) { toast.push("Please enter a valid phone number."); return; }
     setBusy(true);
     try {
       const { data } = await api.post("/api/contact", form);
@@ -27,19 +30,19 @@ export default function Contact() {
         <div className="space-y-6">
           <div>
             <div className="kicker">Studio</div>
-            <p className="text-body mt-2 text-[14px] flex items-center gap-2"><MapPin size={14} /> Agartala, Tripura, India</p>
+            <p className="text-body mt-2 text-[14px] flex items-center gap-2"><MapPin size={14} /> {t("contact.address")}</p>
           </div>
           <div>
             <div className="kicker">Email</div>
-            <p className="text-body mt-2 text-[14px] flex items-center gap-2"><Mail size={14} /> hello@nestservices.in</p>
+            <p className="text-body mt-2 text-[14px] flex items-center gap-2"><Mail size={14} /> {t("contact.email")}</p>
           </div>
           <div>
             <div className="kicker">Phone</div>
-            <p className="text-body mt-2 text-[14px] flex items-center gap-2"><Phone size={14} /> +91 90000 00000</p>
+            <p className="text-body mt-2 text-[14px] flex items-center gap-2"><Phone size={14} /> {t("contact.phone")}</p>
           </div>
           <div>
             <div className="kicker">WhatsApp</div>
-            <a href="https://wa.me/919000000000?text=Hello%20Nest%20Services" target="_blank" rel="noreferrer" className="text-nest-terra link-underline text-[14px] inline-flex items-center gap-2 mt-2">
+            <a href={`https://wa.me/${t("whatsapp.number").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(t("whatsapp.message"))}`} target="_blank" rel="noreferrer" className="text-nest-terra link-underline text-[14px] inline-flex items-center gap-2 mt-2">
               Chat with our team <ArrowUpRight size={14} />
             </a>
           </div>
@@ -50,7 +53,7 @@ export default function Contact() {
             <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" className="w-full bg-white border border-nest-sand py-3 px-3 text-[14px]" data-testid="contact-name" />
             <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email" className="w-full bg-white border border-nest-sand py-3 px-3 text-[14px]" data-testid="contact-email" />
           </div>
-          <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Phone (optional)" className="w-full bg-white border border-nest-sand py-3 px-3 text-[14px]" data-testid="contact-phone" />
+          <input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Phone (required)" pattern="[0-9+ ()-]{6,20}" className="w-full bg-white border border-nest-sand py-3 px-3 text-[14px]" data-testid="contact-phone" />
           <select value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="w-full bg-white border border-nest-sand py-3 px-3 text-[14px]" data-testid="contact-subject">
             {["General enquiry", "Rentals", "List my property", "Partnership", "Feedback"].map((s) => <option key={s}>{s}</option>)}
           </select>

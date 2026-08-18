@@ -8,6 +8,7 @@ from auth import (clear_auth_cookies, create_access_token, create_refresh_token,
                   verify_password)
 from db import get_db
 from models import LoginIn, RegisterIn
+from timezones import now_ist
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -25,7 +26,7 @@ async def register(payload: RegisterIn, response: Response):
         "phone": payload.phone,
         "password_hash": hash_password(payload.password),
         "role": "user",
-        "created_at": datetime.now(timezone.utc),
+        "created_at": now_ist(),
     }
     result = await db.users.insert_one(doc)
     uid = str(result.inserted_id)
@@ -41,16 +42,19 @@ async def login(payload: LoginIn, request: Request, response: Response):
     db = get_db()
     email = payload.email.lower().strip()
 
-    # brute-force guard — derive real client IP behind ingress/proxy
+    # Brute-force guard — soft limit, mostly to slow credential-stuffing bots.
+    # Real users shouldn't hit this; if they do we clear it on the next success.
+    FAIL_LIMIT = 50            # attempts before temporary lockout
+    LOCK_MINUTES = 5           # how long the lockout lasts
     fwd = request.headers.get("x-forwarded-for") or request.headers.get("x-real-ip") or ""
     real_ip = (fwd.split(",")[0].strip() if fwd else "") or (request.client.host if request.client else "unknown")
     ident = f"{real_ip}:{email}"
     email_ident = f"email:{email}"
     attempts_doc = await db.login_attempts.find_one({"identifier": ident}) or {}
     email_attempts = await db.login_attempts.find_one({"identifier": email_ident}) or {}
-    now = datetime.now(timezone.utc)
+    now = now_ist()
     for doc in (attempts_doc, email_attempts):
-        if doc.get("count", 0) >= 5:
+        if doc.get("count", 0) >= FAIL_LIMIT:
             locked_until = doc.get("locked_until")
             if locked_until is not None:
                 if locked_until.tzinfo is None:
@@ -62,7 +66,7 @@ async def login(payload: LoginIn, request: Request, response: Response):
     if not user or not verify_password(payload.password, user["password_hash"]):
         # record failed attempt on both keys
         from datetime import timedelta
-        lock_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+        lock_until = now_ist() + timedelta(minutes=LOCK_MINUTES)
         for key in (ident, email_ident):
             await db.login_attempts.update_one(
                 {"identifier": key},

@@ -106,7 +106,7 @@ class CommentIn(BaseModel):
 class ContactIn(BaseModel):
     name: str
     email: EmailStr
-    phone: Optional[str] = None
+    phone: str = Field(min_length=6, max_length=20)
     subject: str
     message: str
 

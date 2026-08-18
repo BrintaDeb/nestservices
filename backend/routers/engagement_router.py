@@ -8,6 +8,7 @@ from auth import get_current_user, require_admin
 from db import get_db
 from models import CommentIn, ContactIn, SavedSearchIn, WishlistToggleIn
 from services.alerts import _matches
+from timezones import now_ist
 
 router = APIRouter(tags=["engagement"])
 
@@ -21,7 +22,7 @@ async def wishlist_toggle(payload: WishlistToggleIn, user: dict = Depends(get_cu
     if existing:
         await db.wishlist.delete_one(key)
         return {"wishlisted": False}
-    await db.wishlist.insert_one({**key, "created_at": datetime.now(timezone.utc)})
+    await db.wishlist.insert_one({**key, "created_at": now_ist()})
     return {"wishlisted": True}
 
 
@@ -51,7 +52,7 @@ async def wishlist_list(user: dict = Depends(get_current_user)):
 async def saved_search_create(payload: SavedSearchIn, user: dict = Depends(get_current_user)):
     db = get_db()
     doc = {"user_id": user["id"], "name": payload.name, "query": payload.query,
-           "alerts_enabled": True, "created_at": datetime.now(timezone.utc)}
+           "alerts_enabled": True, "created_at": now_ist()}
     result = await db.saved_searches.insert_one(doc)
     # Preview count for current matches
     props = await db.properties.find({"status": {"$ne": "draft"}}).to_list(500)
@@ -96,7 +97,7 @@ async def add_comment(payload: CommentIn, user: dict = Depends(get_current_user)
     db = get_db()
     doc = {"property_id": payload.property_id, "body": payload.body[:1000],
            "user_id": user["id"], "user_name": user.get("name", "Guest"),
-           "hidden": False, "created_at": datetime.now(timezone.utc)}
+           "hidden": False, "created_at": now_ist()}
     result = await db.comments.insert_one(doc)
     await db.properties.update_one({"_id": ObjectId(payload.property_id)}, {"$inc": {"comments_count": 1}})
     return {"id": str(result.inserted_id), "body": doc["body"], "user_name": doc["user_name"],
@@ -136,6 +137,6 @@ async def notification_read(nid: str, user: dict = Depends(get_current_user)):
 async def contact(payload: ContactIn):
     db = get_db()
     doc = payload.model_dump()
-    doc["created_at"] = datetime.now(timezone.utc)
+    doc["created_at"] = now_ist()
     await db.contacts.insert_one(doc)
     return {"ok": True, "message": "Thank you. Nest Services will reach out shortly."}

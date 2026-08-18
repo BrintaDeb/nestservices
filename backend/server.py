@@ -20,6 +20,8 @@ from routers.properties_router import router as properties_router  # noqa: E402
 from routers.tenancy_router import router as tenancy_router  # noqa: E402
 from routers.uploads_router import router as uploads_router  # noqa: E402
 from routers.ai_router import router as ai_router  # noqa: E402
+from routers.settings_router import router as settings_router, ensure_defaults as ensure_setting_defaults  # noqa: E402
+from timezones import now_ist  # noqa: E402
 
 app = FastAPI(title="Nest Services API", version="2.0.0")
 
@@ -39,7 +41,7 @@ IMG = {
 
 
 def _seed_properties() -> list[dict]:
-    now = datetime.now(timezone.utc)
+    now = now_ist()
     def make(**kw):
         base = {
             "created_at": now, "updated_at": now, "likes": 0, "comments_count": 0,
@@ -121,7 +123,7 @@ async def _seed_admin_and_user(db):
             "phone": "+91 90000 00000",
             "password_hash": hash_password(admin_password),
             "role": "admin",
-            "created_at": datetime.now(timezone.utc),
+            "created_at": now_ist(),
         })
     elif not verify_password(admin_password, existing["password_hash"]):
         await db.users.update_one({"email": admin_email},
@@ -138,7 +140,7 @@ async def _seed_admin_and_user(db):
             "phone": "+91 98000 12345",
             "password_hash": hash_password(demo_password),
             "role": "user",
-            "created_at": datetime.now(timezone.utc),
+            "created_at": now_ist(),
         })
     elif not verify_password(demo_password, existing_user["password_hash"]):
         await db.users.update_one({"email": demo_email},
@@ -166,6 +168,7 @@ async def _startup():
             )
 
     await _seed_admin_and_user(db)
+    await ensure_setting_defaults()
 
 
 @app.on_event("shutdown")
@@ -176,7 +179,7 @@ async def _shutdown():
 # Health
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "nest-services", "time": datetime.now(timezone.utc).isoformat()}
+    return {"status": "ok", "service": "nest-services", "time": now_ist().isoformat()}
 
 
 @app.get("/api/")
@@ -192,6 +195,7 @@ app.include_router(bookings_router)
 app.include_router(engagement_router)
 app.include_router(tenancy_router)
 app.include_router(ai_router)
+app.include_router(settings_router)
 
 
 # CORS — same-origin via ingress. Allow explicit origin so credentials cookies work.

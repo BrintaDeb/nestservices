@@ -4,6 +4,7 @@ import { MessageCircle } from "lucide-react";
 import "./App.css";
 
 import { AuthProvider, useAuth } from "./lib/auth";
+import { SettingsProvider, useSettings } from "./lib/settings";
 import { ToastProvider } from "./components/ToastProvider";
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
@@ -28,6 +29,7 @@ import { api } from "./lib/api";
 function Shell() {
   const nav = useNavigate();
   const { user } = useAuth();
+  const { t } = useSettings();
   const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
@@ -83,8 +85,8 @@ function Shell() {
 
       <Footer />
 
-      <a href="https://wa.me/919000000000?text=Hello%20Nest%20Services" target="_blank" rel="noreferrer" className="wa-float" data-testid="whatsapp-support-button">
-        <MessageCircle size={16} /> WhatsApp support
+      <a href={`https://wa.me/${t("whatsapp.number").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(t("whatsapp.message"))}`} target="_blank" rel="noreferrer" className="wa-float" data-testid="whatsapp-support-button">
+        <MessageCircle size={16} /> {t("whatsapp.button_label")}
       </a>
     </>
   );
@@ -94,9 +96,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ToastProvider>
-          <Shell />
-        </ToastProvider>
+        <SettingsProvider>
+          <ToastProvider>
+            <Shell />
+          </ToastProvider>
+        </SettingsProvider>
       </AuthProvider>
     </BrowserRouter>
   );

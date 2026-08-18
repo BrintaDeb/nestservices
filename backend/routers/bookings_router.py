@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from auth import get_current_user, require_admin
 from db import get_db
 from models import BookingIn, StatusUpdateIn
+from timezones import now_ist
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 
@@ -37,7 +38,7 @@ async def create_booking(payload: BookingIn, user: dict = Depends(get_current_us
     doc["user_email"] = user.get("email")
     doc["property_title"] = prop.get("title") if prop else "Property"
     doc["status"] = "pending"
-    doc["created_at"] = datetime.now(timezone.utc)
+    doc["created_at"] = now_ist()
     result = await db.bookings.insert_one(doc)
     # notify
     await db.notifications.insert_one({
@@ -45,7 +46,7 @@ async def create_booking(payload: BookingIn, user: dict = Depends(get_current_us
         "title": "Tour requested",
         "body": f"Your visit to {doc['property_title']} on {doc['date']} at {doc['time_slot']} is pending confirmation.",
         "unread": True,
-        "created_at": datetime.now(timezone.utc),
+        "created_at": now_ist(),
     })
     doc["_id"] = result.inserted_id
     return _serialize(doc)
@@ -79,7 +80,7 @@ async def update_booking(booking_id: str, payload: StatusUpdateIn, _admin=Depend
         "title": f"Tour {payload.status}",
         "body": f"Your tour for {doc.get('property_title')} is now {payload.status}.",
         "unread": True,
-        "created_at": datetime.now(timezone.utc),
+        "created_at": now_ist(),
     })
     return _serialize(doc)
 

@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from db import get_db
+from timezones import now_ist
 
 log = logging.getLogger("nest.alerts")
 
@@ -133,7 +134,7 @@ async def dispatch_new_property_alerts(prop: dict) -> dict:
         return stats
 
     saved = await db.saved_searches.find({"alerts_enabled": {"$ne": False}}).to_list(500)
-    now = datetime.now(timezone.utc)
+    now = now_ist()
     for s in saved:
         if not _matches(s.get("query") or {}, prop):
             continue
