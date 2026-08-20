@@ -176,7 +176,7 @@ export default function Home() {
               <motion.div 
                 key={n} 
                 variants={fadeUpVariant}
-                className="grid grid-cols-[50px_1fr] gap-6 py-8 hairline first:border-0 hover:bg-white/5 transition-colors px-4 -mx-4 rounded-xl"
+                className="grid grid-cols-[50px_1fr] gap-6 p-6 glass-card hover:bg-white/10 transition-colors mb-6"
               >
                 <span className="font-mono-sm text-nest-stone pt-2">{n}</span>
                 <div>
@@ -197,7 +197,7 @@ export default function Home() {
           whileInView="visible"
           viewport={{ once: true }}
           variants={staggerContainer}
-          className="relative z-10"
+          className="relative z-10 glass-card p-16 max-w-4xl mx-auto"
         >
           <motion.div variants={fadeUpVariant} className="kicker justify-center inline-flex text-nest-stone before:bg-nest-stone">Ready when you are</motion.div>
           <motion.h2 variants={fadeUpVariant} className="headline-lg mt-8 text-nest-ivory">
