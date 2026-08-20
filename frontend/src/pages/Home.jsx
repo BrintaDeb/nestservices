@@ -32,7 +32,7 @@ export default function Home() {
   const { t } = useSettings();
   const toast = useToast();
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: true });
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: true, align: "start" });
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
