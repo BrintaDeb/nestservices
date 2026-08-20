@@ -88,7 +88,7 @@ export default function Home() {
               {t("home.hero_body")}
             </p>
             
-            <div className="glass-white p-2 flex flex-col md:flex-row gap-2 md:items-center rounded-full shadow-2xl">
+            <div className="glass-white p-2 flex flex-col md:flex-row gap-2 md:items-center rounded-2xl md:rounded-full shadow-2xl">
               <div className="flex items-center gap-3 flex-1 px-4">
                 <Search size={18} className="text-nest-ivory opacity-60" />
                 <input
@@ -197,7 +197,7 @@ export default function Home() {
           whileInView="visible"
           viewport={{ once: true }}
           variants={staggerContainer}
-          className="relative z-10 glass-card p-16 max-w-4xl mx-auto"
+          className="relative z-10 glass-card p-8 md:p-16 max-w-4xl mx-auto"
         >
           <motion.div variants={fadeUpVariant} className="kicker justify-center inline-flex text-nest-stone before:bg-nest-stone">Ready when you are</motion.div>
           <motion.h2 variants={fadeUpVariant} className="headline-lg mt-8 text-nest-ivory">

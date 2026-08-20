@@ -130,7 +130,7 @@ html.lenis, html.lenis body { height: auto; }
 .headline-lg { font-family:'Plus Jakarta Sans',sans-serif; font-weight:500; font-size: clamp(40px, 5.5vw, 84px); line-height:.98; letter-spacing:-0.03em; }
 .headline-md { font-family:'Plus Jakarta Sans',sans-serif; font-weight:500; font-size: clamp(28px, 3.5vw, 52px); line-height:1.05; letter-spacing:-0.02em; }
 
-.text-body { color:#3A3A3A; line-height:1.65; }
+.text-body { color:#9FA3A9; line-height:1.65; }
 
 /* Whatsapp float */
 .wa-float { position: fixed; right:22px; bottom:22px; z-index:50; background:#25D366; color:#fff; padding:14px 18px; border-radius:999px; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:500; display:inline-flex; align-items:center; gap:8px; box-shadow: 0 20px 40px -12px rgba(37,211,102,.5); transition: transform .3s ease; }
