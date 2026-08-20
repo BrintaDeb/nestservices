@@ -1,12 +1,29 @@
-import { useEffect, useState } from "react";
-import { ArrowUpRight, Search } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { ArrowUpRight, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api, toApiError } from "../lib/api";
-import Walkthrough from "../components/Walkthrough";
 import PropertyCard from "../components/PropertyCard";
 import { useAuth } from "../lib/auth";
 import { useSettings } from "../lib/settings";
 import { useToast } from "../components/ToastProvider";
+import Hero3D from "../components/Hero3D";
+import { motion } from "framer-motion";
+import useEmblaCarousel from "embla-carousel-react";
+
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15
+    }
+  }
+};
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
@@ -15,8 +32,18 @@ export default function Home() {
   const { t } = useSettings();
   const toast = useToast();
 
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: true });
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
   useEffect(() => {
-    api.get("/api/properties", { params: { limit: 6 } })
+    api.get("/api/properties", { params: { limit: 8 } })
       .then(({ data }) => setFeatured(data))
       .catch(() => setFeatured([]));
     if (user) {
@@ -36,64 +63,108 @@ export default function Home() {
   };
 
   return (
-    <main>
-      <Walkthrough />
-
-      {/* Intro */}
-      <section className="container-nest pt-32 pb-24 grid md:grid-cols-2 gap-16 items-end">
-        <div>
-          <div className="kicker">{t("home.hero_kicker")}</div>
-          <h2 className="headline-lg mt-6 text-nest-char">{t("home.hero_title")}<br /><em className="not-italic text-nest-terra font-normal">{t("home.hero_title_em")}</em></h2>
-        </div>
-        <div>
-          <p className="text-body max-w-md text-[16px]">{t("home.hero_body")}</p>
-          <Link to="/explore" className="mt-8 inline-flex items-center gap-2 text-nest-terra font-display link-underline" data-testid="intro-explore-link">
-            Discover residences <ArrowUpRight size={14} />
-          </Link>
-        </div>
+    <main className="bg-nest-ink text-nest-ivory min-h-screen overflow-hidden">
+      
+      {/* Hero Section with 3D Background */}
+      <section className="relative w-full h-screen flex flex-col justify-center">
+        <Hero3D />
+        
+        <motion.div 
+          className="container-nest relative z-20 mt-16"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={fadeUpVariant} className="kicker text-nest-stone before:bg-nest-stone">
+            {t("home.hero_kicker")}
+          </motion.div>
+          <motion.h2 variants={fadeUpVariant} className="headline-lg mt-6 text-nest-ivory drop-shadow-2xl">
+            {t("home.hero_title")}<br />
+            <em className="not-italic text-nest-glow font-normal">{t("home.hero_title_em")}</em>
+          </motion.h2>
+          
+          <motion.div variants={fadeUpVariant} className="mt-10 max-w-xl">
+            <p className="text-nest-sand text-lg mb-8 drop-shadow-md">
+              {t("home.hero_body")}
+            </p>
+            
+            <div className="glass-white p-2 flex flex-col md:flex-row gap-2 md:items-center rounded-full shadow-2xl">
+              <div className="flex items-center gap-3 flex-1 px-4">
+                <Search size={18} className="text-nest-ivory opacity-60" />
+                <input
+                  type="text"
+                  placeholder="Try 'Agartala 2 bedroom under ₹20,000'"
+                  className="flex-1 bg-transparent outline-none py-3 text-nest-ivory placeholder:text-nest-ivory/50"
+                  data-testid="home-search-input"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") window.location.href = `/explore?q=${encodeURIComponent(e.currentTarget.value)}`;
+                  }}
+                />
+              </div>
+              <Link to="/explore" className="btn-primary whitespace-nowrap" data-testid="home-search-cta">Search <ArrowUpRight size={14} /></Link>
+            </div>
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* Search band */}
-      <section className="container-nest">
-        <div className="glass-white p-4 md:p-3 flex flex-col md:flex-row gap-3 md:items-center rounded-md">
-          <div className="flex items-center gap-3 flex-1 px-2">
-            <Search size={17} className="text-nest-clay" />
-            <input
-              type="text"
-              placeholder="Try 'Agartala 2 bedroom under ₹20,000'"
-              className="flex-1 bg-transparent outline-none py-3 text-[14px]"
-              data-testid="home-search-input"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") window.location.href = `/explore?q=${encodeURIComponent(e.currentTarget.value)}`;
-              }}
-            />
-          </div>
-          <Link to="/explore" className="btn-primary" data-testid="home-search-cta">Search residences <ArrowUpRight size={13} /></Link>
-        </div>
-      </section>
-
-      {/* Featured */}
-      <section className="container-nest pt-24 pb-20">
-        <div className="flex items-end justify-between gap-4 mb-10">
+      {/* Featured 3D Carousel */}
+      <section className="container-nest py-32 relative z-10 bg-nest-ink">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={staggerContainer}
+          className="flex items-end justify-between gap-4 mb-12"
+        >
           <div>
-            <div className="kicker">Curated in Agartala</div>
-            <h2 className="headline-md mt-4 text-nest-char">Homes to come home to.</h2>
+            <motion.div variants={fadeUpVariant} className="kicker text-nest-stone before:bg-nest-stone">Curated in Agartala</motion.div>
+            <motion.h2 variants={fadeUpVariant} className="headline-md mt-4 text-nest-ivory">Homes to come home to.</motion.h2>
           </div>
-          <Link to="/explore" className="link-underline font-display text-nest-terra text-[13px]" data-testid="featured-view-all">View all residences →</Link>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featured.map((p) => (
-            <PropertyCard key={p.id} p={p} wished={wished.includes(p.id)} onToggleWish={toggleWish} />
-          ))}
+          <motion.div variants={fadeUpVariant} className="flex gap-3">
+            <button onClick={scrollPrev} className="p-3 rounded-full border border-white/10 hover:bg-white/5 transition-colors">
+              <ChevronLeft size={20} />
+            </button>
+            <button onClick={scrollNext} className="p-3 rounded-full border border-white/10 hover:bg-white/5 transition-colors">
+              <ChevronRight size={20} />
+            </button>
+          </motion.div>
+        </motion.div>
+
+        {/* Embla Carousel Viewport */}
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          className="overflow-hidden -mx-4 px-4 pb-12" 
+          ref={emblaRef}
+        >
+          <div className="flex gap-6">
+            {featured.map((p) => (
+              <div key={p.id} className="flex-[0_0_85%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0">
+                <PropertyCard p={p} wished={wished.includes(p.id)} onToggleWish={toggleWish} />
+              </div>
+            ))}
+          </div>
+        </motion.div>
+        
+        <div className="mt-4 text-center">
+          <Link to="/explore" className="link-underline font-display text-nest-stone text-[14px]" data-testid="featured-view-all">View all residences →</Link>
         </div>
       </section>
 
-      {/* Why */}
-      <section className="bg-white hairline">
-        <div className="container-nest py-24 grid md:grid-cols-[1fr_1.6fr] gap-14">
+      {/* Why Cinematic Grid */}
+      <section className="bg-black hairline">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={staggerContainer}
+          className="container-nest py-32 grid md:grid-cols-[1fr_1.6fr] gap-16"
+        >
           <div>
-            <div className="kicker">Why Nest Services</div>
-            <h2 className="headline-md mt-6 text-nest-char">More than a<br /><em className="not-italic text-nest-terra font-normal">place to live.</em></h2>
+            <motion.div variants={fadeUpVariant} className="kicker text-nest-stone before:bg-nest-stone">Why Nest Services</motion.div>
+            <motion.h2 variants={fadeUpVariant} className="headline-md mt-6 text-nest-ivory">More than a<br /><em className="not-italic text-nest-glow font-normal">place to live.</em></motion.h2>
           </div>
           <div>
             {[
@@ -101,27 +172,42 @@ export default function Home() {
               ["02", "Move with clarity", "Search, tour, apply, sign and settle — one considered journey."],
               ["03", "Stay supported", "Rent, maintenance and lease — quietly organised in your resident portal."],
               ["04", "Own with confidence", "Landlords get a modern console — listings, occupancy and messages, in one place."],
-            ].map(([n, t, d]) => (
-              <div key={n} className="grid grid-cols-[50px_1fr] gap-6 py-6 hairline first:border-0">
-                <span className="font-mono-sm text-nest-clay">{n}</span>
+            ].map(([n, t, d], i) => (
+              <motion.div 
+                key={n} 
+                variants={fadeUpVariant}
+                className="grid grid-cols-[50px_1fr] gap-6 py-8 hairline first:border-0 hover:bg-white/5 transition-colors px-4 -mx-4 rounded-xl"
+              >
+                <span className="font-mono-sm text-nest-stone pt-2">{n}</span>
                 <div>
-                  <h3 className="font-display text-[24px] text-nest-char">{t}</h3>
-                  <p className="text-body mt-2 text-[14px] max-w-md">{d}</p>
+                  <h3 className="font-display text-[28px] text-nest-ivory">{t}</h3>
+                  <p className="text-nest-sand mt-3 text-[16px] max-w-md opacity-80">{d}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* CTA band */}
-      <section className="container-nest py-28 text-center">
-        <div className="kicker justify-center inline-flex">Ready when you are</div>
-        <h2 className="headline-lg mt-6 text-nest-char">{t("home.cta_title")}<br /><em className="not-italic text-nest-terra font-normal">{t("home.cta_title_em")}</em></h2>
-        <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
-          <Link to="/explore" className="btn-primary" data-testid="cta-explore">Explore rentals <ArrowUpRight size={14} /></Link>
-          <Link to="/tour" className="btn-outline" data-testid="cta-tour">Book a tour <ArrowUpRight size={14} /></Link>
-        </div>
+      <section className="container-nest py-32 text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-black to-nest-ink pointer-events-none"></div>
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="relative z-10"
+        >
+          <motion.div variants={fadeUpVariant} className="kicker justify-center inline-flex text-nest-stone before:bg-nest-stone">Ready when you are</motion.div>
+          <motion.h2 variants={fadeUpVariant} className="headline-lg mt-8 text-nest-ivory">
+            {t("home.cta_title")}<br /><em className="not-italic text-nest-glow font-normal">{t("home.cta_title_em")}</em>
+          </motion.h2>
+          <motion.div variants={fadeUpVariant} className="mt-12 flex items-center justify-center gap-4 flex-wrap">
+            <Link to="/explore" className="btn-primary text-base px-8 py-4" data-testid="cta-explore">Explore rentals <ArrowUpRight size={16} /></Link>
+            <Link to="/tour" className="btn-outline text-base px-8 py-4" data-testid="cta-tour">Book a tour <ArrowUpRight size={16} /></Link>
+          </motion.div>
+        </motion.div>
       </section>
     </main>
   );

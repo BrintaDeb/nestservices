@@ -5,33 +5,33 @@
 @tailwind utilities;
 
 :root {
-  --background: 40 20% 96%;          /* ivory */
-  --foreground: 0 0% 10%;            /* charcoal */
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 10%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 10%;
-  --primary: 0 0% 10%;
-  --primary-foreground: 40 20% 96%;
-  --secondary: 33 24% 87%;           /* sand */
-  --secondary-foreground: 0 0% 15%;
-  --muted: 36 18% 92%;
-  --muted-foreground: 0 0% 35%;
-  --accent: 25 43% 48%;              /* terra */
+  --background: 240 10% 4%;        /* ink */
+  --foreground: 40 20% 96%;        /* ivory */
+  --card: 240 10% 6%;
+  --card-foreground: 40 20% 96%;
+  --popover: 240 10% 6%;
+  --popover-foreground: 40 20% 96%;
+  --primary: 40 20% 96%;
+  --primary-foreground: 240 10% 4%;
+  --secondary: 0 0% 15%;           /* char */
+  --secondary-foreground: 40 20% 96%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 70%;
+  --accent: 25 43% 48%;            /* terra */
   --accent-foreground: 40 30% 98%;
   --destructive: 0 60% 45%;
   --destructive-foreground: 40 30% 98%;
-  --border: 34 12% 82%;
-  --input: 34 12% 82%;
+  --border: 0 0% 15%;
+  --input: 0 0% 15%;
   --ring: 25 43% 48%;
-  --radius: 4px;
+  --radius: 8px;
 }
 
 html, body, #root {
   margin: 0;
   min-height: 100%;
-  background: #F7F5F0;
-  color: #151515;
+  background: #09090b;
+  color: #F7F5F0;
 }
 
 body {
@@ -47,7 +47,7 @@ html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: hidden; }
 
-::selection { background: #1A1A1A; color: #F7F5F0; }
+::selection { background: #F7F5F0; color: #1A1A1A; }
 
 /* Utility classes shared across the app */
 .font-display { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.02em; }
@@ -55,16 +55,16 @@ html.lenis, html.lenis body { height: auto; }
 
 .container-nest { width: 100%; max-width: 1440px; margin-left: auto; margin-right: auto; padding-left: clamp(20px, 6vw, 96px); padding-right: clamp(20px, 6vw, 96px); }
 
-.glass-white { background: rgba(255,255,255,.72); backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); border: 1px solid rgba(24,24,24,.08); }
-.hairline { border-top: 1px solid rgba(24,24,24,.10); }
-.hairline-b { border-bottom: 1px solid rgba(24,24,24,.10); }
+.glass-white { background: rgba(0,0,0,.4); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius); }
+.hairline { border-top: 1px solid rgba(255,255,255,.1); }
+.hairline-b { border-bottom: 1px solid rgba(255,255,255,.1); }
 
-.btn-primary { display:inline-flex; align-items:center; gap:10px; background:#151515; color:#F7F5F0; border:1px solid #151515; padding:14px 22px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:500; font-size:13px; letter-spacing:.02em; border-radius:4px; transition:transform .3s ease, background .3s ease; cursor:pointer; }
-.btn-primary:hover { background:#000; transform:translateY(-2px); }
-.btn-outline { display:inline-flex; align-items:center; gap:10px; background:transparent; color:#151515; border:1px solid rgba(24,24,24,.22); padding:14px 22px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:500; font-size:13px; letter-spacing:.02em; border-radius:4px; transition:border-color .3s ease, color .3s ease; cursor:pointer; }
-.btn-outline:hover { border-color:#151515; }
-.btn-ghost { background:transparent; border:0; padding:8px; cursor:pointer; color:#151515; }
-.btn-ghost:hover { color:#B76C3D; }
+.btn-primary { display:inline-flex; align-items:center; gap:10px; background:#F7F5F0; color:#09090b; border:1px solid rgba(255,255,255,.2); padding:14px 22px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:600; font-size:13px; letter-spacing:.02em; border-radius:99px; transition:all .4s cubic-bezier(.22,.61,.36,1); cursor:pointer; box-shadow: 0 0 20px rgba(255,255,255,.1); }
+.btn-primary:hover { background:#fff; transform:translateY(-2px); box-shadow: 0 8px 30px rgba(255,255,255,.2); }
+.btn-outline { display:inline-flex; align-items:center; gap:10px; background:rgba(255,255,255,.05); color:#F7F5F0; border:1px solid rgba(255,255,255,.15); padding:14px 22px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:500; font-size:13px; letter-spacing:.02em; border-radius:99px; backdrop-filter: blur(10px); transition:all .4s cubic-bezier(.22,.61,.36,1); cursor:pointer; }
+.btn-outline:hover { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.3); transform:translateY(-2px); }
+.btn-ghost { background:transparent; border:0; padding:8px; cursor:pointer; color:#F7F5F0; opacity: 0.8; transition: opacity .3s; }
+.btn-ghost:hover { opacity: 1; color:#fff; }
 
 .link-underline { position:relative; }
 .link-underline::after { content:""; position:absolute; left:0; bottom:-4px; height:1px; width:100%; background:currentColor; transform: scaleX(0); transform-origin: right; transition: transform .4s cubic-bezier(.65,0,.35,1); }
@@ -101,11 +101,11 @@ html.lenis, html.lenis body { height: auto; }
 .scene-progress i { display:block; height:100%; background:#F7F5F0; width:0%; transition: width .1s linear; }
 
 /* Property card */
-.prop-card { background:#fff; border:1px solid rgba(24,24,24,.08); transition: transform .5s cubic-bezier(.22,.61,.36,1), box-shadow .5s; overflow:hidden; }
-.prop-card:hover { transform: translateY(-4px); box-shadow: 0 30px 60px -30px rgba(24,24,24,.20); }
+.prop-card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); border-radius: 16px; backdrop-filter: blur(12px); transition: transform .6s cubic-bezier(.22,.61,.36,1), box-shadow .6s cubic-bezier(.22,.61,.36,1), border-color .6s; overflow:hidden; }
+.prop-card:hover { transform: translateY(-8px); box-shadow: 0 40px 80px -20px rgba(0,0,0,.8); border-color: rgba(255,255,255,.2); }
 .prop-media { position:relative; aspect-ratio: 4/3; overflow:hidden; }
-.prop-media img { width:100%; height:100%; object-fit:cover; transition: transform 1s cubic-bezier(.22,.61,.36,1); }
-.prop-card:hover .prop-media img { transform: scale(1.06); }
+.prop-media img { width:100%; height:100%; object-fit:cover; filter: brightness(0.9); transition: transform 1.2s cubic-bezier(.22,.61,.36,1), filter 1.2s; }
+.prop-card:hover .prop-media img { transform: scale(1.08); filter: brightness(1.1); }
 
 /* Nav
    NOTE: intentionally not restyling `.links` display — mobile toggle is handled

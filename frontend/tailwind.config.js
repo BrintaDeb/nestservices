@@ -32,25 +32,36 @@ module.exports = {
         ring: 'hsl(var(--ring))',
         nest: {
           ivory: '#F7F5F0',
-          surface: '#FFFFFF',
+          surface: '#111111',
           sand: '#E8E1D3',
           stone: '#B8AFA0',
           char: '#1A1A1A',
           slate: '#3A3A3A',
           clay: '#8A7458',
           terra: '#B76C3D',
-          ink: '#151515',
+          ink: '#09090b',
+          glow: '#3b82f6',
         },
       },
       keyframes: {
         'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
         'accordion-up':   { from: { height: 'var(--radix-accordion-content-height)' }, to: { height: '0' } },
         'fade-up': { '0%': { opacity: 0, transform: 'translateY(24px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'pulse-glow': {
+          '0%, 100%': { opacity: 0.8, filter: 'brightness(1)' },
+          '50%': { opacity: 1, filter: 'brightness(1.2)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-up': 'fade-up 0.8s cubic-bezier(.22,.61,.36,1) both',
+        'float': 'float 6s ease-in-out infinite',
+        'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
       }
     }
   },
