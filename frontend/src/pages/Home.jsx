@@ -1,13 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { ArrowUpRight, Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, toApiError } from "../lib/api";
 import PropertyCard from "../components/PropertyCard";
 import { useAuth } from "../lib/auth";
 import { useSettings } from "../lib/settings";
 import { useToast } from "../components/ToastProvider";
-import Hero3D from "../components/Hero3D";
-import { motion } from "framer-motion";
+import HeroParallax from "../components/HeroParallax";
+import { motion, useMotionValue, useTransform, useSpring, useMotionTemplate } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
 
 const fadeUpVariant = {
@@ -31,8 +31,48 @@ export default function Home() {
   const { user } = useAuth();
   const { t } = useSettings();
   const toast = useToast();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: true, align: "start" });
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: true, skipSnaps: true, align: "start" });
+
+  // 3D Tilt Logic
+  const cardRef = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  // Smooth out the mouse values for parallax translation
+  const mouseX = useSpring(x, { stiffness: 300, damping: 30 });
+  const mouseY = useSpring(y, { stiffness: 300, damping: 30 });
+
+  // Translation on axes for flat depth (no shape distortion)
+  const x1 = useTransform(mouseX, [-200, 200], [-8, 8]);
+  const y1 = useTransform(mouseY, [-200, 200], [-8, 8]);
+  
+  // iOS Gyro Gloss / Sheen Effect
+  const rotateX = useTransform(mouseY, [-200, 200], [2, -2]); // Very subtle 3D tilt
+  const rotateY = useTransform(mouseX, [-200, 200], [-2, 2]); // Very subtle 3D tilt
+  
+  // Map mouse to gradient position (moves opposite to simulate light source)
+  const glareX = useTransform(mouseX, [-200, 200], [100, 0]); 
+  const glareY = useTransform(mouseY, [-200, 200], [100, 0]);
+  
+  // Dynamic smooth glossy background
+  const background = useMotionTemplate`radial-gradient(120% 120% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 60%)`;
+
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    x.set(e.clientX - centerX);
+    y.set(e.clientY - centerY);
+  };
+  
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -65,9 +105,9 @@ export default function Home() {
   return (
     <main className="bg-nest-ink text-nest-ivory min-h-screen overflow-hidden">
       
-      {/* Hero Section with 3D Background */}
-      <section className="relative w-full h-screen flex flex-col justify-center">
-        <Hero3D />
+      {/* Hero Section with Cinematic Background */}
+      <section className="relative w-full h-screen flex flex-col justify-center overflow-hidden">
+        <HeroParallax />
         
         <motion.div 
           className="container-nest relative z-20 mt-16"
@@ -75,33 +115,68 @@ export default function Home() {
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={fadeUpVariant} className="kicker text-nest-stone before:bg-nest-stone">
-            {t("home.hero_kicker")}
-          </motion.div>
-          <motion.h2 variants={fadeUpVariant} className="headline-lg mt-6 text-nest-ivory drop-shadow-2xl">
-            {t("home.hero_title")}<br />
-            <em className="not-italic text-nest-glow font-normal">{t("home.hero_title_em")}</em>
-          </motion.h2>
-          
-          <motion.div variants={fadeUpVariant} className="mt-10 max-w-xl">
-            <p className="text-nest-sand text-lg mb-8 drop-shadow-md">
-              {t("home.hero_body")}
-            </p>
+          <motion.div 
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="relative inline-block w-full max-w-4xl"
+            variants={fadeUpVariant}
+          >
+            {/* Moving glass background with iOS gyro sheen */}
+            <motion.div 
+              className="absolute inset-0 rounded-[32px] border border-white/20 shadow-2xl pointer-events-none"
+              style={{ 
+                x: x1, 
+                y: y1, 
+                rotateX, 
+                rotateY, 
+                background, 
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)'
+              }}
+            />
             
-            <div className="glass-white p-2 flex flex-col md:flex-row gap-2 md:items-center rounded-2xl md:rounded-full shadow-2xl">
-              <div className="flex items-center gap-3 flex-1 px-4">
-                <Search size={18} className="text-nest-ivory opacity-60" />
-                <input
-                  type="text"
-                  placeholder="Try 'Agartala 2 bedroom under ₹20,000'"
-                  className="flex-1 bg-transparent outline-none py-3 text-nest-ivory placeholder:text-nest-ivory/50"
-                  data-testid="home-search-input"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") window.location.href = `/explore?q=${encodeURIComponent(e.currentTarget.value)}`;
-                  }}
-                />
+            {/* Fixed text container */}
+            <div className="relative z-10 p-10 md:p-14">
+              <div className="kicker text-nest-stone before:bg-nest-stone">
+                {t("home.hero_kicker")}
               </div>
-              <Link to="/explore" className="btn-primary whitespace-nowrap" data-testid="home-search-cta">Search <ArrowUpRight size={14} /></Link>
+              <h2 className="headline-lg mt-6 text-white drop-shadow-2xl">
+                {t("home.hero_title")} <em className="not-italic text-nest-terra font-normal">{t("home.hero_title_em")}</em>
+              </h2>
+              
+              <div className="mt-10">
+                <p className="text-white/80 text-lg mb-8 drop-shadow-md">
+                  {t("home.hero_body")}
+                </p>
+                
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    navigate(searchQuery.trim() ? `/explore?q=${encodeURIComponent(searchQuery.trim())}` : '/explore');
+                  }}
+                  className="bg-black/40 backdrop-blur-md p-2 flex flex-col md:flex-row gap-2 md:items-center rounded-2xl md:rounded-full shadow-2xl border border-white/10 pointer-events-auto w-full max-w-full overflow-hidden"
+                >
+                  <div className="flex items-center gap-3 flex-1 px-4 min-w-0">
+                    <Search size={18} className="text-white opacity-60 flex-shrink-0" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Try 'Agartala 2 bedroom under ₹20,000'"
+                      className="flex-1 min-w-0 bg-transparent outline-none py-3 text-white placeholder:text-white/50"
+                      data-testid="home-search-input"
+                    />
+                  </div>
+                  <button 
+                    type="submit"
+                    className="btn-primary whitespace-nowrap flex-shrink-0 w-full md:w-auto justify-center !rounded-xl md:!rounded-full px-8" 
+                    data-testid="home-search-cta"
+                  >
+                    Search <ArrowUpRight size={14} />
+                  </button>
+                </form>
+              </div>
             </div>
           </motion.div>
         </motion.div>
@@ -118,7 +193,7 @@ export default function Home() {
         >
           <div>
             <motion.div variants={fadeUpVariant} className="kicker text-nest-stone before:bg-nest-stone">Curated in Agartala</motion.div>
-            <motion.h2 variants={fadeUpVariant} className="headline-md mt-4 text-nest-ivory">Homes to come home to.</motion.h2>
+            <motion.h2 variants={fadeUpVariant} className="headline-md mt-4 text-white">Homes to come home to.</motion.h2>
           </div>
           <motion.div variants={fadeUpVariant} className="flex gap-3">
             <button onClick={scrollPrev} className="p-3 rounded-full border border-white/10 bg-black/20 hover:bg-white/10 transition-colors text-white">
@@ -139,9 +214,9 @@ export default function Home() {
           className="overflow-hidden -mx-4 px-4 pb-12" 
           ref={emblaRef}
         >
-          <div className="flex gap-6">
+          <div className="flex -ml-6">
             {featured.map((p) => (
-              <div key={p.id} className="flex-[0_0_85%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0">
+              <div key={p.id} className="flex-[0_0_85%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0 pl-6">
                 <PropertyCard p={p} wished={wished.includes(p.id)} onToggleWish={toggleWish} />
               </div>
             ))}
@@ -164,7 +239,7 @@ export default function Home() {
         >
           <div>
             <motion.div variants={fadeUpVariant} className="kicker text-nest-stone before:bg-nest-stone">Why Nest Services</motion.div>
-            <motion.h2 variants={fadeUpVariant} className="headline-md mt-6 text-nest-ivory">More than a<br /><em className="not-italic text-nest-glow font-normal">place to live.</em></motion.h2>
+            <motion.h2 variants={fadeUpVariant} className="headline-md mt-6 text-white">More than a<br /><em className="not-italic text-nest-terra font-normal">place to live.</em></motion.h2>
           </div>
           <div>
             {[
@@ -180,8 +255,8 @@ export default function Home() {
               >
                 <span className="font-mono-sm text-nest-stone pt-2">{n}</span>
                 <div>
-                  <h3 className="font-display text-[28px] text-nest-ivory">{t}</h3>
-                  <p className="text-nest-sand mt-3 text-[16px] max-w-md opacity-80">{d}</p>
+                  <h3 className="font-display text-[28px] text-white">{t}</h3>
+                  <p className="text-white/80 mt-3 text-[16px] max-w-md opacity-80">{d}</p>
                 </div>
               </motion.div>
             ))}
@@ -200,8 +275,8 @@ export default function Home() {
           className="relative z-10 glass-card p-8 md:p-16 max-w-4xl mx-auto"
         >
           <motion.div variants={fadeUpVariant} className="kicker justify-center inline-flex text-nest-stone before:bg-nest-stone">Ready when you are</motion.div>
-          <motion.h2 variants={fadeUpVariant} className="headline-lg mt-8 text-nest-ivory">
-            {t("home.cta_title")}<br /><em className="not-italic text-nest-glow font-normal">{t("home.cta_title_em")}</em>
+          <motion.h2 variants={fadeUpVariant} className="headline-lg mt-8 text-white">
+            {t("home.cta_title")}<br /><em className="not-italic text-nest-terra font-normal">{t("home.cta_title_em")}</em>
           </motion.h2>
           <motion.div variants={fadeUpVariant} className="mt-12 flex items-center justify-center gap-4 flex-wrap">
             <Link to="/explore" className="btn-primary text-base px-8 py-4" data-testid="cta-explore">Explore rentals <ArrowUpRight size={16} /></Link>

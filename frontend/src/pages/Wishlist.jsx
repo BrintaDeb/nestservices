@@ -23,7 +23,7 @@ export default function Wishlist() {
   return (
     <main className="container-nest pt-28 pb-20">
       <div className="kicker">Your saved homes</div>
-      <h1 className="headline-lg mt-4 text-nest-char">Wishlist.</h1>
+      <h1 className="headline-lg mt-4 text-white">Wishlist.</h1>
 
       {items.length === 0 ? (
         <div className="mt-16 p-16 border border-dashed border-nest-sand text-center">

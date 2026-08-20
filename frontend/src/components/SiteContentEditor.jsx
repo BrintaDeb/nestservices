@@ -44,7 +44,8 @@ export default function SiteContentEditor() {
       setDirty({});
     } catch (e) { toast.push(toApiError(e)); } finally { setReloading(false); }
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
 
   const set = (k, v) => { setValues((s) => ({ ...s, [k]: v })); setDirty((d) => ({ ...d, [k]: true })); };
 
@@ -75,37 +76,37 @@ export default function SiteContentEditor() {
 
   return (
     <div className="mt-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
-          <div className="kicker">Site content</div>
-          <p className="text-body text-[13px] mt-2 max-w-xl">Edit any user-facing text and the WhatsApp support number. Changes go live everywhere on the site the moment they save.</p>
+          <div className="kicker text-nest-stone before:bg-nest-stone">Site content</div>
+          <p className="text-white/80 text-[14px] mt-3 max-w-xl">Edit any user-facing text and the WhatsApp support number. Changes go live everywhere on the site the moment they save.</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={load} className="btn-outline !py-2 !px-3 !text-[12px]" disabled={reloading} data-testid="site-content-reload">
-            <RotateCcw size={13} /> Reload
+        <div className="flex gap-3">
+          <button onClick={load} className="btn-outline !py-2.5 !px-4 !text-[13px]" disabled={reloading} data-testid="site-content-reload">
+            <RotateCcw size={14} /> Reload
           </button>
-          <button onClick={saveAll} className="btn-primary !py-2 !px-3 !text-[12px]" disabled={saving || dirtyCount === 0} data-testid="site-content-save">
-            <Save size={13} /> {saving ? "Saving…" : `Save${dirtyCount ? ` (${dirtyCount})` : ""}`}
+          <button onClick={saveAll} className="btn-primary !py-2.5 !px-4 !text-[13px]" disabled={saving || dirtyCount === 0} data-testid="site-content-save">
+            <Save size={14} /> {saving ? "Saving…" : `Save${dirtyCount ? ` (${dirtyCount})` : ""}`}
           </button>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-6">
         {FIELDS.map((f) => (
-          <div key={f.key} className={`p-4 border ${dirty[f.key] ? "border-nest-terra" : "border-nest-sand"} bg-white`}>
+          <div key={f.key} className={`p-6 glass-card rounded-xl border ${dirty[f.key] ? "border-nest-terra shadow-[0_0_15px_rgba(229,123,85,0.15)]" : "border-white/10"} group hover:border-white/20 transition-all`}>
             <div className="flex items-center justify-between">
-              <label className="font-mono-sm text-nest-clay">{f.label}</label>
-              <button onClick={() => resetKey(f.key)} className="text-[10px] font-mono-sm text-nest-terra link-underline" data-testid={`site-content-reset-${f.key}`}>Reset</button>
+              <label className="font-mono-sm text-white">{f.label}</label>
+              <button onClick={() => resetKey(f.key)} className="text-[11px] font-mono-sm text-nest-terra hover:text-nest-terra/80 transition-colors" data-testid={`site-content-reset-${f.key}`}>Reset to default</button>
             </div>
-            <div className="text-[10px] font-mono-sm text-nest-clay/70 mt-1">{f.key}</div>
+            <div className="text-[11px] font-mono-sm text-nest-stone opacity-70 mt-1 mb-4">{f.key}</div>
             {f.type === "textarea" ? (
               <textarea value={values[f.key] || ""} onChange={(e) => set(f.key, e.target.value)}
                         rows={4}
-                        className="w-full mt-2 bg-nest-ivory border border-nest-sand py-2 px-3 text-[13px]"
+                        className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[14px] text-white focus:border-nest-terra focus:outline-none transition-colors custom-scrollbar"
                         data-testid={`site-content-input-${f.key}`} />
             ) : (
               <input type={f.type} value={values[f.key] || ""} onChange={(e) => set(f.key, e.target.value)}
-                     className="w-full mt-2 bg-nest-ivory border border-nest-sand py-2 px-3 text-[13px]"
+                     className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[14px] text-white focus:border-nest-terra focus:outline-none transition-colors"
                      data-testid={`site-content-input-${f.key}`} />
             )}
           </div>

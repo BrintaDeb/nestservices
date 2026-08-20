@@ -91,95 +91,97 @@ export default function Explore() {
   };
 
   return (
-    <main className="container-nest pt-32 pb-20">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
-        <div>
-          <div className="kicker">Curated rentals · India</div>
-          <h1 className="headline-lg mt-4 text-nest-char">Homes with a<br /><em className="not-italic text-nest-terra font-normal">point of view.</em></h1>
+    <main className="bg-nest-ink text-white min-h-screen pt-32 pb-20">
+      <div className="container-nest max-w-7xl">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+          <div>
+            <div className="kicker text-nest-stone before:bg-nest-stone">Curated rentals · India</div>
+            <h1 className="headline-lg mt-4 text-white">Homes with a<br /><em className="not-italic text-nest-terra font-normal">point of view.</em></h1>
+          </div>
+          <p className="text-white/80 max-w-sm text-[14px]">Thoughtfully selected residences in Agartala and beyond. <b className="text-white font-medium">{items.length} residences</b> match your view.</p>
         </div>
-        <p className="text-body max-w-sm text-[14px]">Thoughtfully selected residences in Agartala and beyond. <b className="text-nest-char">{items.length} residences</b> match your view.</p>
-      </div>
 
-      {/* Filter bar */}
-      <div className="glass-white p-3 rounded-md flex flex-wrap gap-2 items-center">
-        <div className="flex items-center gap-2 flex-1 min-w-[220px] px-3">
-          <Search size={16} className="text-nest-clay" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search city, area or property"
-                 className="flex-1 bg-transparent outline-none py-3 text-[13px]" data-testid="rental-search-input" />
-        </div>
-        <select value={city} onChange={(e) => setCity(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px]" data-testid="filter-city">
-          <option>All cities</option>
-          {facets.cities.map((c) => <option key={c}>{c}</option>)}
-        </select>
-        <select value={type} onChange={(e) => setType(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px]" data-testid="filter-property-type">
-          {TYPES.map((t) => <option key={t}>{t}</option>)}
-        </select>
-        <select value={maxRent} onChange={(e) => setMaxRent(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px]" data-testid="filter-price">
-          {PRICE_BANDS.map((b) => <option key={b.label} value={b.value}>{b.label}</option>)}
-        </select>
-        <button className="btn-outline !py-2 !px-3 !text-[12px]" onClick={() => setShowFilters(!showFilters)} data-testid="filter-more-button">
-          <SlidersHorizontal size={13} /> More filters
-        </button>
-        <button className="btn-primary !py-2 !px-3 !text-[12px]" onClick={saveSearch} data-testid="save-search-button"><Bell size={12} /> Save search</button>
-      </div>
-
-      {showFilters && (
-        <div className="glass-white mt-3 p-4 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div>
-            <label className="font-mono-sm text-nest-clay block mb-2">Bedrooms</label>
-            <select value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px] w-full" data-testid="filter-bedrooms">
-              <option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option>
-            </select>
+        {/* Filter bar */}
+        <div className="glass-card p-3 rounded-xl flex flex-wrap gap-3 items-center border border-white/10">
+          <div className="flex items-center gap-2 flex-1 min-w-[220px] px-3 bg-black/40 rounded-lg border border-white/5">
+            <Search size={16} className="text-nest-stone" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search city, area or property"
+                   className="flex-1 bg-transparent outline-none py-3 text-[13px] text-white placeholder:text-nest-stone/70" data-testid="rental-search-input" />
           </div>
-          <div>
-            <label className="font-mono-sm text-nest-clay block mb-2">Furnishing</label>
-            <select value={furnished} onChange={(e) => setFurnished(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px] w-full" data-testid="filter-furnished">
-              {FURNISHED.map((f) => <option key={f}>{f}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="font-mono-sm text-nest-clay block mb-2">Pet friendly</label>
-            <select value={pet} onChange={(e) => setPet(e.target.value)} className="bg-transparent border border-nest-sand py-3 px-3 text-[13px] w-full" data-testid="filter-pet">
-              {PET.map((p) => <option key={p}>{p}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="font-mono-sm text-nest-clay block mb-2">Move-in from</label>
-            <input type="date" value={moveIn} onChange={(e) => setMoveIn(e.target.value)} className="bg-transparent border border-nest-sand py-[10px] px-3 text-[13px] w-full" data-testid="filter-movein" />
-          </div>
-          <button className="btn-outline !py-2 !px-3 !text-[12px] col-span-2 md:col-span-4" onClick={() => { setBedrooms(""); setFurnished("Any"); setPet("Any"); setMoveIn(""); setMinRent(""); setMaxRent(""); setType("All types"); setCity("All cities"); setQ(""); }} data-testid="filter-clear-button">
-            <X size={12} /> Clear all filters
+          <select value={city} onChange={(e) => setCity(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white appearance-none cursor-pointer outline-none focus:border-nest-terra transition-colors" data-testid="filter-city">
+            <option className="bg-nest-ink">All cities</option>
+            {facets.cities.map((c) => <option key={c} className="bg-nest-ink">{c}</option>)}
+          </select>
+          <select value={type} onChange={(e) => setType(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white appearance-none cursor-pointer outline-none focus:border-nest-terra transition-colors" data-testid="filter-property-type">
+            {TYPES.map((t) => <option key={t} className="bg-nest-ink">{t}</option>)}
+          </select>
+          <select value={maxRent} onChange={(e) => setMaxRent(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white appearance-none cursor-pointer outline-none focus:border-nest-terra transition-colors" data-testid="filter-price">
+            {PRICE_BANDS.map((b) => <option key={b.label} value={b.value} className="bg-nest-ink">{b.label}</option>)}
+          </select>
+          <button className="btn-outline !py-2.5 !px-4 !text-[12px]" onClick={() => setShowFilters(!showFilters)} data-testid="filter-more-button">
+            <SlidersHorizontal size={14} /> More filters
           </button>
+          <button className="btn-primary !py-2.5 !px-4 !text-[12px]" onClick={saveSearch} data-testid="save-search-button"><Bell size={14} /> Save search</button>
         </div>
-      )}
 
-      <div className="flex items-center justify-between mt-6 mb-6 text-[12px] text-body">
-        <span>Showing <b className="text-nest-char">{items.length}</b> residences</span>
-      </div>
-
-      {loading ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="prop-card">
-              <div className="prop-media bg-nest-sand animate-pulse" />
-              <div className="p-5 space-y-3">
-                <div className="h-5 bg-nest-sand animate-pulse w-2/3" />
-                <div className="h-3 bg-nest-sand animate-pulse w-1/2" />
-              </div>
+        {showFilters && (
+          <div className="glass-card mt-4 p-6 rounded-xl grid grid-cols-2 md:grid-cols-4 gap-6 border border-white/10">
+            <div>
+              <label className="font-mono-sm text-nest-stone block mb-2 opacity-80">Bedrooms</label>
+              <select value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white w-full appearance-none outline-none focus:border-nest-terra transition-colors" data-testid="filter-bedrooms">
+                <option value="" className="bg-nest-ink">Any</option><option value="1" className="bg-nest-ink">1+</option><option value="2" className="bg-nest-ink">2+</option><option value="3" className="bg-nest-ink">3+</option><option value="4" className="bg-nest-ink">4+</option>
+              </select>
             </div>
-          ))}
+            <div>
+              <label className="font-mono-sm text-nest-stone block mb-2 opacity-80">Furnishing</label>
+              <select value={furnished} onChange={(e) => setFurnished(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white w-full appearance-none outline-none focus:border-nest-terra transition-colors" data-testid="filter-furnished">
+                {FURNISHED.map((f) => <option key={f} className="bg-nest-ink">{f}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="font-mono-sm text-nest-stone block mb-2 opacity-80">Pet friendly</label>
+              <select value={pet} onChange={(e) => setPet(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white w-full appearance-none outline-none focus:border-nest-terra transition-colors" data-testid="filter-pet">
+                {PET.map((p) => <option key={p} className="bg-nest-ink">{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="font-mono-sm text-nest-stone block mb-2 opacity-80">Move-in from</label>
+              <input type="date" value={moveIn} onChange={(e) => setMoveIn(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg py-[11px] px-4 text-[13px] text-white w-full outline-none focus:border-nest-terra transition-colors" data-testid="filter-movein" style={{ colorScheme: 'dark' }} />
+            </div>
+            <button className="btn-outline !py-2 !px-4 !text-[12px] col-span-2 md:col-span-4 justify-center" onClick={() => { setBedrooms(""); setFurnished("Any"); setPet("Any"); setMoveIn(""); setMinRent(""); setMaxRent(""); setType("All types"); setCity("All cities"); setQ(""); }} data-testid="filter-clear-button">
+              <X size={14} /> Clear all filters
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mt-8 mb-6 text-[13px] text-white/70">
+          <span>Showing <b className="text-white font-medium">{items.length}</b> residences</span>
         </div>
-      ) : items.length === 0 ? (
-        <div className="text-center py-24">
-          <p className="text-body">No residences match those filters yet. Try widening your search.</p>
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map((p) => (
-            <PropertyCard key={p.id} p={p} wished={wished.includes(p.id)} onToggleWish={toggleWish} />
-          ))}
-        </div>
-      )}
+
+        {loading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="prop-card glass-card">
+                <div className="prop-media bg-white/10 animate-pulse" />
+                <div className="p-6 space-y-4">
+                  <div className="h-6 bg-white/10 animate-pulse w-3/4 rounded-md" />
+                  <div className="h-4 bg-white/10 animate-pulse w-1/2 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="text-center py-24 glass-card rounded-2xl border border-white/5">
+            <p className="text-white/70 text-[15px]">No residences match those filters yet. Try widening your search.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {items.map((p) => (
+              <PropertyCard key={p.id} p={p} wished={wished.includes(p.id)} onToggleWish={toggleWish} />
+            ))}
+          </div>
+        )}
+      </div>
     </main>
   );
 }

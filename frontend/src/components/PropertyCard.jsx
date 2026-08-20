@@ -5,7 +5,7 @@ import { assetUrl, formatINR } from "../lib/api";
 export default function PropertyCard({ p, wished = false, onToggleWish }) {
   const cover = p.cover_image || (p.images && p.images[0]);
   return (
-    <article className="prop-card" data-testid={`property-card-${p.id}`}>
+    <article className="prop-card flex flex-col h-full" data-testid={`property-card-${p.id}`}>
       <div className="prop-media">
         <img src={assetUrl(cover)} alt={p.title} loading="lazy" />
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
@@ -25,7 +25,7 @@ export default function PropertyCard({ p, wished = false, onToggleWish }) {
           <Sparkles size={12} className="opacity-70" /> {p.images?.length || 3} photos
         </span>
       </div>
-      <div className="p-6 flex flex-col h-full">
+      <div className="p-6 flex flex-col flex-1">
         <div className="flex-1">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -48,7 +48,7 @@ export default function PropertyCard({ p, wished = false, onToggleWish }) {
         </div>
 
         <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between">
-          <Link to={`/property/${p.id}`} className="inline-flex items-center gap-2 text-[13px] font-display text-white hover:text-nest-terra transition-colors group tracking-wide" data-testid={`view-property-${p.id}`}>
+          <Link to={`/property/${p.id}`} className="btn-primary !py-2 !px-4 !text-[12px] group tracking-wide rounded-md" data-testid={`view-property-${p.id}`}>
             View residence <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
           <span className="flex items-center gap-1 text-nest-terra font-mono-sm text-[12px] bg-nest-terra/10 px-2 py-1 rounded">

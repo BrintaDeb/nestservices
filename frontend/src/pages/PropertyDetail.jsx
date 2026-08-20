@@ -22,6 +22,7 @@ export default function PropertyDetail() {
   const nav = useNavigate();
 
   const load = () => api.get(`/api/properties/${id}`).then(({ data }) => setP(data)).catch(() => setP(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [id]);
   useEffect(() => {
     if (!date) return;
@@ -74,7 +75,7 @@ export default function PropertyDetail() {
       <div className="container-nest">
         <div className="kicker mb-4">{p.property_type} · {p.city}</div>
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <h1 className="headline-lg text-nest-char">{p.title}</h1>
+          <h1 className="headline-lg text-white">{p.title}</h1>
           <div className="text-right">
             <div className="font-display text-[28px] text-nest-terra">{formatINR(p.monthly_rent)} <small className="text-[12px] text-body">/ month</small></div>
             <div className="text-body text-[12px]">Security deposit {formatINR(p.security_deposit)}</div>
@@ -135,14 +136,14 @@ export default function PropertyDetail() {
       <div className="container-nest mt-14 grid md:grid-cols-[2fr_1fr] gap-14">
         <div>
           <div className="kicker">Residence</div>
-          <h2 className="headline-md mt-3 text-nest-char">A considered stay</h2>
+          <h2 className="headline-md mt-3 text-white">A considered stay</h2>
           <p className="text-body mt-4 text-[15px] leading-[1.7]">{p.description}</p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 hairline hairline-b py-6">
-            <div><b className="font-display text-[22px] text-nest-char">{p.bedrooms}</b><br /><small className="font-mono-sm text-nest-clay"><BedDouble size={11} className="inline" /> Bedrooms</small></div>
-            <div><b className="font-display text-[22px] text-nest-char">{p.bathrooms}</b><br /><small className="font-mono-sm text-nest-clay"><Bath size={11} className="inline" /> Bathrooms</small></div>
-            <div><b className="font-display text-[22px] text-nest-char">{p.furnished}</b><br /><small className="font-mono-sm text-nest-clay">Furnishing</small></div>
-            <div><b className="font-display text-[22px] text-nest-char">{p.pet_friendly ? "Yes" : "No"}</b><br /><small className="font-mono-sm text-nest-clay">Pets</small></div>
+            <div><b className="font-display text-[22px] text-white">{p.bedrooms}</b><br /><small className="font-mono-sm text-nest-clay"><BedDouble size={11} className="inline" /> Bedrooms</small></div>
+            <div><b className="font-display text-[22px] text-white">{p.bathrooms}</b><br /><small className="font-mono-sm text-nest-clay"><Bath size={11} className="inline" /> Bathrooms</small></div>
+            <div><b className="font-display text-[22px] text-white">{p.furnished}</b><br /><small className="font-mono-sm text-nest-clay">Furnishing</small></div>
+            <div><b className="font-display text-[22px] text-white">{p.pet_friendly ? "Yes" : "No"}</b><br /><small className="font-mono-sm text-nest-clay">Pets</small></div>
           </div>
 
           <div className="mt-8">
@@ -166,12 +167,12 @@ export default function PropertyDetail() {
           {/* Comments */}
           <div className="mt-14">
             <div className="kicker">What visitors say</div>
-            <h3 className="headline-md mt-3 text-nest-char">{p.comments?.length || 0} comments</h3>
+            <h3 className="headline-md mt-3 text-white">{p.comments?.length || 0} comments</h3>
             <div className="mt-6 space-y-4">
               {p.comments?.map((c) => (
                 <div key={c.id} className="p-4 border border-nest-sand bg-white">
                   <div className="flex items-center justify-between text-[12px] text-nest-clay">
-                    <b className="text-nest-char">{c.user_name}</b>
+                    <b className="text-white">{c.user_name}</b>
                     <span className="font-mono-sm">{new Date(c.created_at).toLocaleDateString()}</span>
                   </div>
                   <p className="mt-2 text-body text-[14px]">{c.body}</p>
@@ -191,9 +192,9 @@ export default function PropertyDetail() {
         <aside className="glass-white p-6 rounded-md h-fit sticky top-24">
           <div className="kicker">Owner / manager</div>
           <div className="mt-4 flex items-center gap-3">
-            <div className="w-12 h-12 grid place-items-center border border-nest-char text-nest-char font-display">N</div>
+            <div className="w-12 h-12 grid place-items-center border border-nest-char text-white font-display">N</div>
             <div>
-              <b className="font-display text-nest-char">Nest Services</b>
+              <b className="font-display text-white">Nest Services</b>
               <div className="text-body text-[12px]">Managed rental · Agartala</div>
             </div>
           </div>
@@ -204,7 +205,7 @@ export default function PropertyDetail() {
           </div>
           <div className="mt-6 pt-6 hairline">
             <div className="font-mono-sm text-nest-clay">Availability</div>
-            <div className="mt-1 font-display text-nest-char">Move-in from {p.available_from}</div>
+            <div className="mt-1 font-display text-white">Move-in from {p.available_from}</div>
           </div>
         </aside>
       </div>

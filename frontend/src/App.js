@@ -23,6 +23,7 @@ import About from "./pages/About";
 import BookTour from "./pages/BookTour";
 import Notifications from "./pages/Notifications";
 import Apply from "./pages/Apply";
+import Terms from "./pages/Terms";
 
 import { api } from "./lib/api";
 
@@ -81,6 +82,7 @@ function Shell() {
         <Route path="/map" element={<MapPage />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
+        <Route path="/terms" element={<Terms />} />
       </Routes>
 
       <Footer />
@@ -93,6 +95,18 @@ function Shell() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      // Simulate physical light source (glare moves opposite to tilt)
+      document.documentElement.style.setProperty('--cursor-x', `${100 - x}%`);
+      document.documentElement.style.setProperty('--cursor-y', `${100 - y}%`);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>

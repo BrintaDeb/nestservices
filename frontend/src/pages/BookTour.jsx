@@ -39,44 +39,46 @@ export default function BookTour() {
   };
 
   return (
-    <main className="container-nest pt-28 pb-20">
-      <div className="kicker">Book a private tour</div>
-      <h1 className="headline-lg mt-4 text-nest-char">Come by,<br /><em className="not-italic text-nest-terra font-normal">feel the space.</em></h1>
+    <main className="bg-nest-ink text-white min-h-screen pt-32 pb-20">
+      <div className="container-nest max-w-3xl">
+        <div className="kicker text-nest-stone before:bg-nest-stone">Book a private tour</div>
+        <h1 className="headline-lg mt-4 text-white">Come by,<br /><em className="not-italic text-nest-terra font-normal">feel the space.</em></h1>
 
-      <form onSubmit={submit} className="mt-10 grid md:grid-cols-2 gap-4 max-w-3xl">
-        <div className="md:col-span-2">
-          <label className="font-mono-sm text-nest-clay block mb-2">Residence</label>
-          <select value={pid} onChange={(e) => setPid(e.target.value)} required className="w-full bg-white border border-nest-sand py-3 px-3 text-[13px]" data-testid="tour-property">
-            <option value="">Pick a residence…</option>
-            {properties.map((p) => <option key={p.id} value={p.id}>{p.title} · {p.city}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="font-mono-sm text-nest-clay block mb-2">Date</label>
-          <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-white border border-nest-sand py-3 px-3 text-[13px]" data-testid="tour-date" />
-        </div>
-        <div>
-          <label className="font-mono-sm text-nest-clay block mb-2">Time</label>
-          <select value={time} onChange={(e) => setTime(e.target.value)} className="w-full bg-white border border-nest-sand py-3 px-3 text-[13px]" data-testid="tour-time">
-            {SLOTS.map((s) => {
-              const found = slots.find((x) => x.time === s);
-              const dis = found && !found.available;
-              return <option key={s} value={s} disabled={dis}>{s}{dis ? " · Booked" : ""}</option>;
-            })}
-          </select>
-        </div>
-        <div>
-          <label className="font-mono-sm text-nest-clay block mb-2">Phone</label>
-          <input required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 …" className="w-full bg-white border border-nest-sand py-3 px-3 text-[13px]" data-testid="tour-phone" />
-        </div>
-        <div>
-          <label className="font-mono-sm text-nest-clay block mb-2">Notes (optional)</label>
-          <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything you'd like us to prepare?" className="w-full bg-white border border-nest-sand py-3 px-3 text-[13px]" data-testid="tour-notes" />
-        </div>
-        <button className="btn-primary md:col-span-2 justify-center" disabled={busy} data-testid="tour-submit">
-          {busy ? "Requesting…" : "Request tour"} <CalendarDays size={14} />
-        </button>
-      </form>
+        <form onSubmit={submit} className="mt-14 glass-card p-8 md:p-10 grid md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <label className="font-mono-sm text-nest-stone opacity-80 block mb-2">Residence</label>
+            <select value={pid} onChange={(e) => setPid(e.target.value)} required className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white focus:border-nest-terra focus:outline-none transition-colors appearance-none" data-testid="tour-property">
+              <option value="" className="bg-nest-ink">Pick a residence…</option>
+              {properties.map((p) => <option key={p.id} value={p.id} className="bg-nest-ink">{p.title} · {p.city}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="font-mono-sm text-nest-stone opacity-80 block mb-2">Date</label>
+            <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white focus:border-nest-terra focus:outline-none transition-colors" data-testid="tour-date" style={{ colorScheme: 'dark' }} />
+          </div>
+          <div>
+            <label className="font-mono-sm text-nest-stone opacity-80 block mb-2">Time</label>
+            <select value={time} onChange={(e) => setTime(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white focus:border-nest-terra focus:outline-none transition-colors appearance-none" data-testid="tour-time">
+              {SLOTS.map((s) => {
+                const found = slots.find((x) => x.time === s);
+                const dis = found && !found.available;
+                return <option key={s} value={s} disabled={dis} className="bg-nest-ink">{s}{dis ? " · Booked" : ""}</option>;
+              })}
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <label className="font-mono-sm text-nest-stone opacity-80 block mb-2">Phone</label>
+            <input required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 …" className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white focus:border-nest-terra focus:outline-none transition-colors" data-testid="tour-phone" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="font-mono-sm text-nest-stone opacity-80 block mb-2">Notes (optional)</label>
+            <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything you'd like us to prepare?" className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white focus:border-nest-terra focus:outline-none transition-colors" data-testid="tour-notes" />
+          </div>
+          <button className="btn-primary md:col-span-2 justify-center mt-4" disabled={busy} data-testid="tour-submit">
+            {busy ? "Requesting…" : "Request tour"} <CalendarDays size={14} />
+          </button>
+        </form>
+      </div>
     </main>
   );
 }

@@ -15,6 +15,7 @@ export default function ApplyPage() {
     occupants: 1, move_in_date: "", duration_months: 11, emergency_contact: "", documents: [],
   });
   const [consent, setConsent] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
   const { user } = useAuth();
   const toast = useToast();
@@ -39,6 +40,7 @@ export default function ApplyPage() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!termsAgreed) return toast.push("You must agree to the Terms & Conditions.");
     if (!consent) return toast.push("Please provide screening consent to continue.");
     setBusy(true);
     try {
@@ -49,46 +51,54 @@ export default function ApplyPage() {
   };
 
   return (
-    <main className="container-nest pt-28 pb-20">
-      <div className="kicker">Rental application</div>
-      <h1 className="headline-lg mt-4 text-nest-char">Apply for your<br /><em className="not-italic text-nest-terra font-normal">next home.</em></h1>
-      <p className="text-body mt-4 max-w-lg">Step 3 of 6 — Digital application. Sensitive documents are stored privately and only shared with your assigned landlord.</p>
+    <main className="bg-nest-ink text-white min-h-screen pt-32 pb-20">
+      <div className="container-nest max-w-4xl">
+        <div className="kicker text-nest-stone before:bg-nest-stone">Rental application</div>
+        <h1 className="headline-lg mt-4 text-white">Apply for your<br /><em className="not-italic text-nest-terra font-normal">next home.</em></h1>
+        <p className="text-body mt-4 max-w-lg opacity-80">Step 3 of 6 — Digital application. Sensitive documents are stored privately and only shared with your assigned landlord.</p>
 
-      <form onSubmit={submit} className="mt-10 grid md:grid-cols-2 gap-4">
-        <Select label="Residence" value={form.property_id} onChange={(v) => setForm({ ...form, property_id: v })} required options={[{ value: "", label: "Pick a residence" }, ...properties.map((p) => ({ value: p.id, label: `${p.title} · ${p.city}` }))]} testId="apply-property" />
-        <Text label="Full name" value={form.full_name} onChange={(v) => setForm({ ...form, full_name: v })} required testId="apply-name" />
-        <Text label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required testId="apply-email" />
-        <Text label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required testId="apply-phone" />
-        <Text label="Current address" value={form.current_address} onChange={(v) => setForm({ ...form, current_address: v })} testId="apply-address" />
-        <Select label="Employment" value={form.employment_status} onChange={(v) => setForm({ ...form, employment_status: v })} options={["Salaried", "Self-employed", "Freelance", "Student", "Other"].map((x) => ({ value: x, label: x }))} testId="apply-employment" />
-        <Text label="Employer" value={form.employer} onChange={(v) => setForm({ ...form, employer: v })} testId="apply-employer" />
-        <Text label="Monthly income (₹)" type="number" value={form.monthly_income} onChange={(v) => setForm({ ...form, monthly_income: Number(v) })} testId="apply-income" />
-        <Text label="Occupants" type="number" value={form.occupants} onChange={(v) => setForm({ ...form, occupants: Number(v) })} testId="apply-occupants" />
-        <Text label="Desired move-in" type="date" value={form.move_in_date} onChange={(v) => setForm({ ...form, move_in_date: v })} required testId="apply-movein" />
-        <Text label="Duration (months)" type="number" value={form.duration_months} onChange={(v) => setForm({ ...form, duration_months: Number(v) })} testId="apply-duration" />
-        <Text label="Emergency contact" value={form.emergency_contact} onChange={(v) => setForm({ ...form, emergency_contact: v })} testId="apply-emergency" />
+        <form onSubmit={submit} className="mt-12 p-8 md:p-10 glass-card grid md:grid-cols-2 gap-6">
+          <Select label="Residence" value={form.property_id} onChange={(v) => setForm({ ...form, property_id: v })} required options={[{ value: "", label: "Pick a residence" }, ...properties.map((p) => ({ value: p.id, label: `${p.title} · ${p.city}` }))]} testId="apply-property" />
+          <Text label="Full name" value={form.full_name} onChange={(v) => setForm({ ...form, full_name: v })} required testId="apply-name" />
+          <Text label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required testId="apply-email" />
+          <Text label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required testId="apply-phone" />
+          <Text label="Current address" value={form.current_address} onChange={(v) => setForm({ ...form, current_address: v })} testId="apply-address" />
+          <Select label="Employment" value={form.employment_status} onChange={(v) => setForm({ ...form, employment_status: v })} options={["Salaried", "Self-employed", "Freelance", "Student", "Other"].map((x) => ({ value: x, label: x }))} testId="apply-employment" />
+          <Text label="Employer" value={form.employer} onChange={(v) => setForm({ ...form, employer: v })} testId="apply-employer" />
+          <Text label="Monthly income (₹)" type="number" value={form.monthly_income} onChange={(v) => setForm({ ...form, monthly_income: Number(v) })} testId="apply-income" />
+          <Text label="Occupants" type="number" value={form.occupants} onChange={(v) => setForm({ ...form, occupants: Number(v) })} testId="apply-occupants" />
+          <Text label="Desired move-in" type="date" value={form.move_in_date} onChange={(v) => setForm({ ...form, move_in_date: v })} required testId="apply-movein" />
+          <Text label="Duration (months)" type="number" value={form.duration_months} onChange={(v) => setForm({ ...form, duration_months: Number(v) })} testId="apply-duration" />
+          <Text label="Emergency contact" value={form.emergency_contact} onChange={(v) => setForm({ ...form, emergency_contact: v })} testId="apply-emergency" />
 
-        <div className="md:col-span-2 border border-dashed border-nest-sand p-6 flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex-1">
-            <div className="kicker">Supporting documents</div>
-            <p className="text-body text-[13px] mt-2">Pay slips, ID or rental references — kept private and encrypted at rest.</p>
-            <div className="mt-3 text-[12px] text-nest-terra">{form.documents.length} file(s) uploaded</div>
+          <div className="md:col-span-2 border border-dashed border-white/20 rounded-xl p-6 flex flex-col md:flex-row md:items-center gap-4 bg-white/5 mt-4">
+            <div className="flex-1">
+              <div className="font-mono-sm text-nest-stone">Supporting documents</div>
+              <p className="text-body text-[13px] mt-1 opacity-80">Pay slips, ID or rental references — kept private and encrypted at rest.</p>
+              <div className="mt-3 text-[12px] text-nest-terra font-medium">{form.documents.length} file(s) uploaded</div>
+            </div>
+            <label className="btn-outline cursor-pointer bg-white/5 border-white/20 hover:bg-white/10 text-white">
+              <Upload size={14} /> Upload documents
+              <input type="file" multiple onChange={upload} className="hidden" data-testid="apply-docs-input" />
+            </label>
           </div>
-          <label className="btn-outline cursor-pointer">
-            <Upload size={14} /> Upload documents
-            <input type="file" multiple onChange={upload} className="hidden" data-testid="apply-docs-input" />
-          </label>
-        </div>
 
-        <label className="md:col-span-2 flex items-start gap-3 text-[13px] text-body">
-          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="apply-consent" />
-          <span><ShieldCheck size={14} className="inline text-nest-terra" /> I consent to Nest Services and its partners running a tenant screening check (identity and rental history, where legally permitted).</span>
-        </label>
+          <div className="md:col-span-2 space-y-4 mt-4 border-t border-white/10 pt-8">
+            <label className="flex items-start gap-3 text-[13px] text-body opacity-90 cursor-pointer">
+              <input type="checkbox" checked={termsAgreed} onChange={(e) => setTermsAgreed(e.target.checked)} className="mt-0.5 accent-nest-terra" />
+              <span>I have read and agree to the <a href="/terms" target="_blank" className="text-nest-terra underline hover:text-white transition-colors">Terms and Conditions</a> governing this rental application and lease agreement.</span>
+            </label>
+            <label className="flex items-start gap-3 text-[13px] text-body opacity-90 cursor-pointer">
+              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="apply-consent" className="mt-0.5 accent-nest-terra" />
+              <span><ShieldCheck size={14} className="inline text-nest-terra mr-1" /> I consent to Nest Services and its partners running a tenant screening check (identity and rental history, where legally permitted).</span>
+            </label>
+          </div>
 
-        <button disabled={busy} className="btn-primary md:col-span-2 justify-center" data-testid="apply-submit">
-          {busy ? "Submitting…" : "Submit application"} <ArrowUpRight size={14} />
-        </button>
-      </form>
+          <button disabled={busy} className="btn-primary md:col-span-2 justify-center mt-4" data-testid="apply-submit">
+            {busy ? "Submitting…" : "Submit application"} <ArrowUpRight size={14} />
+          </button>
+        </form>
+      </div>
     </main>
   );
 }
@@ -96,17 +106,17 @@ export default function ApplyPage() {
 function Text({ label, value, onChange, type = "text", required, testId }) {
   return (
     <div>
-      <label className="font-mono-sm text-nest-clay block mb-2">{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="w-full bg-white border border-nest-sand py-3 px-3 text-[13px]" data-testid={testId} />
+      <label className="font-mono-sm text-nest-stone block mb-2 opacity-80">{label}</label>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white focus:border-nest-terra focus:outline-none transition-colors" data-testid={testId} />
     </div>
   );
 }
 function Select({ label, value, onChange, options, required, testId }) {
   return (
     <div>
-      <label className="font-mono-sm text-nest-clay block mb-2">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} required={required} className="w-full bg-white border border-nest-sand py-3 px-3 text-[13px]" data-testid={testId}>
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      <label className="font-mono-sm text-nest-stone block mb-2 opacity-80">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)} required={required} className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-[13px] text-white focus:border-nest-terra focus:outline-none transition-colors appearance-none" data-testid={testId}>
+        {options.map((o) => <option key={o.value} value={o.value} className="bg-nest-ink">{o.label}</option>)}
       </select>
     </div>
   );
