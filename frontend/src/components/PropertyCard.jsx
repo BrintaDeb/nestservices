@@ -10,6 +10,10 @@ export default function PropertyCard({ p, wished = false, onToggleWish }) {
         <img src={assetUrl(cover)} alt={p.title} loading="lazy" />
         <button
           className={`absolute top-3 right-3 w-9 h-9 grid place-items-center rounded-full bg-black/30 backdrop-blur-md border border-white/20 transition-all hover:bg-black/50 hover:scale-105 ${wished ? "text-nest-terra" : "text-white/90"}`}
+          onClick={(e) => { e.preventDefault(); onToggleWish?.(p.id); }}
+          aria-label="Toggle wishlist"
+          data-testid={`property-wishlist-${p.id}`}
+        >
           <Heart size={16} fill={wished ? "currentColor" : "none"} />
         </button>
         <span className="absolute top-3 left-3 flex items-center bg-black/30 text-white/90 border border-white/20 font-mono-sm !text-[10px] py-1.5 px-3 rounded-full backdrop-blur-md shadow-lg tracking-wider uppercase">
