@@ -5,16 +5,16 @@
 @tailwind utilities;
 
 :root {
-  --background: 240 10% 4%;        /* ink */
-  --foreground: 40 20% 96%;        /* ivory */
-  --card: 240 10% 6%;
-  --card-foreground: 40 20% 96%;
-  --popover: 240 10% 6%;
-  --popover-foreground: 40 20% 96%;
-  --primary: 40 20% 96%;
-  --primary-foreground: 240 10% 4%;
-  --secondary: 0 0% 15%;           /* char */
-  --secondary-foreground: 40 20% 96%;
+  --background: 220 16% 7%;        /* #101216 */
+  --foreground: 0 0% 100%;         /* #FFFFFF */
+  --card: 220 10% 13%;             /* #1E1F24 */
+  --card-foreground: 0 0% 100%;
+  --popover: 220 10% 13%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 16 75% 61%;           /* #E57B55 */
+  --primary-foreground: 0 0% 0%;
+  --secondary: 220 10% 13%;
+  --secondary-foreground: 0 0% 100%;
   --muted: 0 0% 15%;
   --muted-foreground: 0 0% 70%;
   --accent: 25 43% 48%;            /* terra */
@@ -30,8 +30,8 @@
 html, body, #root {
   margin: 0;
   min-height: 100%;
-  background: #09090b;
-  color: #F7F5F0;
+  background: #101216;
+  color: #FFFFFF;
 }
 
 body {
@@ -47,7 +47,7 @@ html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: hidden; }
 
-::selection { background: #F7F5F0; color: #1A1A1A; }
+::selection { background: #E57B55; color: #FFFFFF; }
 
 /* Utility classes shared across the app */
 .font-display { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.02em; }
@@ -60,8 +60,8 @@ html.lenis, html.lenis body { height: auto; }
 .hairline { border-top: 1px solid rgba(255,255,255,.1); }
 .hairline-b { border-bottom: 1px solid rgba(255,255,255,.1); }
 
-.btn-primary { display:inline-flex; align-items:center; gap:10px; background:#F7F5F0; color:#09090b; border:1px solid rgba(255,255,255,.2); padding:14px 22px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:600; font-size:13px; letter-spacing:.02em; border-radius:99px; transition:all .4s cubic-bezier(.22,.61,.36,1); cursor:pointer; box-shadow: 0 0 20px rgba(255,255,255,.1); }
-.btn-primary:hover { background:#fff; transform:translateY(-2px); box-shadow: 0 8px 30px rgba(255,255,255,.2); }
+.btn-primary { display:inline-flex; align-items:center; gap:10px; background:#E57B55; color:#111111; border:1px solid #E57B55; padding:14px 22px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:600; font-size:13px; letter-spacing:.02em; border-radius:8px; transition:all .4s cubic-bezier(.22,.61,.36,1); cursor:pointer; box-shadow: 0 0 20px rgba(229,123,85,.3); }
+.btn-primary:hover { background:#EE8865; transform:translateY(-2px); box-shadow: 0 8px 30px rgba(229,123,85,.4); }
 .btn-outline { display:inline-flex; align-items:center; gap:10px; background:rgba(255,255,255,.05); color:#F7F5F0; border:1px solid rgba(255,255,255,.15); padding:14px 22px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:500; font-size:13px; letter-spacing:.02em; border-radius:99px; backdrop-filter: blur(10px); transition:all .4s cubic-bezier(.22,.61,.36,1); cursor:pointer; }
 .btn-outline:hover { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.3); transform:translateY(-2px); }
 .btn-ghost { background:transparent; border:0; padding:8px; cursor:pointer; color:#F7F5F0; opacity: 0.8; transition: opacity .3s; }
@@ -99,7 +99,7 @@ html.lenis, html.lenis body { height: auto; }
 .rail-row.active { opacity:1; }
 
 .scene-progress { position:absolute; left:8%; bottom:8%; z-index:3; width: 220px; height:1px; background: rgba(247,245,240,.25); }
-.scene-progress i { display:block; height:100%; background:#F7F5F0; width:0%; transition: width .1s linear; }
+.scene-progress i { display:block; height:100%; background:#E57B55; width:0%; transition: width .1s linear; }
 
 /* Property card */
 .prop-card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); border-radius: 16px; backdrop-filter: blur(12px); transition: transform .6s cubic-bezier(.22,.61,.36,1), box-shadow .6s cubic-bezier(.22,.61,.36,1), border-color .6s; overflow:hidden; }
