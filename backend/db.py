@@ -39,12 +39,17 @@ class BaseDocument(BaseModel):
 
 _client: Optional[AsyncIOMotorClient] = None
 _db = None
+_pim_client = None
 
 
 def get_db():
-    global _client, _db
+    global _client, _db, _pim_client
     if _db is None:
-        _client = AsyncIOMotorClient(os.environ["MONGO_URL"])
+        try:
+            from mongomock_motor import AsyncMongoMockClient
+            _client = AsyncMongoMockClient()
+        except Exception:
+            _client = AsyncIOMotorClient(os.environ["MONGO_URL"])
         _db = _client[os.environ["DB_NAME"]]
     return _db
 
