@@ -59,7 +59,7 @@ export default function Explore() {
   useEffect(() => {
     setLoading(true);
     api.get("/api/properties", { params: query })
-      .then(({ data }) => setItems(data))
+      .then(({ data }) => setItems(Array.isArray(data) ? data : []))
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
     // sync url
@@ -68,7 +68,7 @@ export default function Explore() {
   }, [query, setParams]);
 
   useEffect(() => {
-    if (user) api.get("/api/wishlist").then(({ data }) => setWished(data.map((x) => x.id))).catch(() => {});
+    if (user) api.get("/api/wishlist").then(({ data }) => setWished(Array.isArray(data) ? data.map((x) => x.id) : [])).catch(() => {});
   }, [user]);
 
   const toggleWish = async (id) => {

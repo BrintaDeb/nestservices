@@ -84,10 +84,10 @@ export default function Home() {
 
   useEffect(() => {
     api.get("/api/properties", { params: { limit: 8 } })
-      .then(({ data }) => setFeatured(data))
+      .then(({ data }) => setFeatured(Array.isArray(data) ? data : []))
       .catch(() => setFeatured([]));
     if (user) {
-      api.get("/api/wishlist").then(({ data }) => setWished(data.map((x) => x.id))).catch(() => {});
+      api.get("/api/wishlist").then(({ data }) => setWished(Array.isArray(data) ? data.map((x) => x.id) : [])).catch(() => {});
     }
   }, [user]);
 
