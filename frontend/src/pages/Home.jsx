@@ -121,11 +121,11 @@ export default function Home() {
             <motion.h2 variants={fadeUpVariant} className="headline-md mt-4 text-nest-ivory">Homes to come home to.</motion.h2>
           </div>
           <motion.div variants={fadeUpVariant} className="flex gap-3">
-            <button onClick={scrollPrev} className="p-3 rounded-full border border-white/10 hover:bg-white/5 transition-colors">
-              <ChevronLeft size={20} />
+            <button onClick={scrollPrev} className="p-3 rounded-full border border-white/10 bg-black/20 hover:bg-white/10 transition-colors text-white">
+              <ChevronLeft size={18} strokeWidth={2.5} />
             </button>
-            <button onClick={scrollNext} className="p-3 rounded-full border border-white/10 hover:bg-white/5 transition-colors">
-              <ChevronRight size={20} />
+            <button onClick={scrollNext} className="p-3 rounded-full border border-white/10 bg-black/20 hover:bg-white/10 transition-colors text-white">
+              <ChevronRight size={18} strokeWidth={2.5} />
             </button>
           </motion.div>
         </motion.div>
